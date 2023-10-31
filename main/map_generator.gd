@@ -13,7 +13,6 @@ var next_active_cells = []
 #counts the number of temporary nodes "dots" in the map which will be converted into rooms
 var tiles_expected_next_iteration = 0
 var tile_count = 0
-var iterator = 0
 
 func _ready():
 	randomize()
@@ -46,22 +45,19 @@ func _input(event):
 			print("Tile Location: ", location)
 			navigate_to_origin(location)
 
-@onready var icon = preload("res://icon.tscn")
+@export var icon: PackedScene
 func navigate_to_origin(location: Vector2i):
 	var current_location = location
 	if !cell_parent_position.has(location):
 		return
-	else:
-		var new_icon = icon.instantiate()
-		add_child(new_icon)
-		new_icon.global_position = (current_location * 80) + Vector2i(40, 40)
 	while cell_parent_position[current_location] != null:
 		await get_tree().process_frame
-		current_location = cell_parent_position[current_location]
 		var new_icon = icon.instantiate()
 		add_child(new_icon)
 		new_icon.global_position = (current_location * 80) + Vector2i(40, 40)
+		current_location = cell_parent_position[current_location]
 
+var iterator = 0
 func run_algorithm():
 	iterator += 1
 	
@@ -91,10 +87,11 @@ func run_algorithm():
 	
 	active_cells = next_active_cells
 	next_active_cells = []
+
 	if tiles_expected_next_iteration != 0:
 		run_algorithm()
-	elif tile_count + 50 < max_tiles:
-		get_tree().reload_current_scene()
+	elif tile_count < max_tiles:
+		print("Map generation failed due to active nodes running out prematurely")
 
 # Fisher-Yates shuffle algorithm
 func shuffle_array_with_seed(array):

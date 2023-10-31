@@ -1,10 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://chtt1yshtx2we"]
+[gd_scene load_steps=6 format=3 uid="uid://bnib2lveh832d"]
 
-[ext_resource type="Texture2D" uid="uid://c343d242aco0o" path="res://Art/Rooms/room_tilemaps.png" id="1_s80nf"]
-[ext_resource type="Script" path="res://map_generator.gd" id="2_kp2lc"]
+[ext_resource type="Texture2D" uid="uid://c343d242aco0o" path="res://main/room_tilemaps.png" id="1_lhtnv"]
+[ext_resource type="Script" path="res://main/map_generator.gd" id="2_cap21"]
+[ext_resource type="PackedScene" uid="uid://dr2rslue3b8c0" path="res://main/icon.tscn" id="3_wv1aq"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4ginc"]
-texture = ExtResource("1_s80nf")
+texture = ExtResource("1_lhtnv")
 texture_region_size = Vector2i(80, 80)
 0:0/next_alternative_id = 3
 0:0/0 = 0
@@ -32,8 +33,9 @@ sources/0 = SubResource("TileSetAtlasSource_4ginc")
 tile_set = SubResource("TileSet_nod23")
 cell_quadrant_size = 80
 format = 2
-script = ExtResource("2_kp2lc")
-max_tiles = 5000
+script = ExtResource("2_cap21")
+max_tiles = 50
+icon = ExtResource("3_wv1aq")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.1, 0.1)
+zoom = Vector2(0.7, 0.7)

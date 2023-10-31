@@ -1,3 +1,6 @@
 res://map_generator.tscn
 res://map_generator.gd
 res://icon.tscn
+res://main/icon.tscn
+res://main/map_generator.tscn
+res://main/map_generator.gd
