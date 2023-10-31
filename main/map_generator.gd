@@ -23,8 +23,8 @@ func start():
 	var origin = Vector2i.ZERO
 	var first_room = 15
 	set_cell(0, origin, 0, Vector2i(first_room, 0))
-	cell_parent_position[origin] = null
-	cell_parent_direction[origin] = null
+#	cell_parent_position[origin] = null
+#	cell_parent_direction[origin] = null
 	cell_depth[origin] = 0
 	mark_cells_to_fill_next(Vector2i(0, 0))
 	active_cells.append(Vector2i(0,0))
@@ -34,7 +34,8 @@ func _process(_delta):
 	if Input.is_action_just_pressed("ui_accept"):
 		get_tree().reload_current_scene()
 	if Input.is_action_just_pressed("ui_up"):
-#		print(cell_depth)
+		print(cell_parent_direction)
+		print(cell_parent_position)
 		pass
 	
 func _input(event):
@@ -50,7 +51,7 @@ func navigate_to_origin(location: Vector2i):
 	var current_location = location
 	if !cell_parent_position.has(location):
 		return
-	while cell_parent_position[current_location] != null:
+	while cell_parent_position.has(current_location):
 		await get_tree().process_frame
 		var new_icon = icon.instantiate()
 		add_child(new_icon)
@@ -66,13 +67,11 @@ func run_algorithm():
 		
 	for cell in active_cells:
 		var cells_to_fill = get_cells_to_fill(cell)
-		
 		#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
-		#array.shuffle() is not used as it isnt attached to the seed and would make maps irreproducible
 		shuffle_array_with_seed(cells_to_fill)
 		
 		for cell_to_fill in cells_to_fill:
-#			await get_tree().process_frame
+			await get_tree().create_timer(0.2).timeout
 			next_active_cells.append(cell_to_fill)
 		
 			var wall_openings := get_wall_openings(cell_to_fill)
@@ -93,8 +92,10 @@ func run_algorithm():
 	elif tile_count < max_tiles:
 		print("Map generation failed due to active nodes running out prematurely")
 
-# Fisher-Yates shuffle algorithm
-func shuffle_array_with_seed(array):
+#input: array
+#output: the same array with randomized order using Fisher-Yates shuffle algorithm
+#array.shuffle() is not used as it isnt attached to the seed and would make maps irreproducible
+func shuffle_array_with_seed(array: Array):
 	for i in range(array.size() - 1, 0, -1):
 		var j = rng.randi() % (i + 1)
 		var temp = array[i]
@@ -103,9 +104,8 @@ func shuffle_array_with_seed(array):
 	return array
 
 #method to spawn rooms
-func manage_room_spawning(cell_to_fill, parent_direction):
+func manage_room_spawning(cell_to_fill: Vector2i, parent_direction: int):
 	manipulate_map(cell_to_fill, parent_direction)
-	
 	#pick a random available room if tile threshold hasnt been met
 	#spawn a closing rooms otherwise
 	if tile_count < max_tiles:
@@ -113,7 +113,6 @@ func manage_room_spawning(cell_to_fill, parent_direction):
 		set_cell(0, cell_to_fill, 0, Vector2i(room_selection[select_random], 0))
 	else:
 		set_cell(0, cell_to_fill, 0, Vector2i(parent_direction, 0))
-
 
 #input: position of cell
 #checks if each direction relative to that cell is empty
@@ -132,18 +131,22 @@ func get_wall_openings(cell: Vector2i) -> Array:
 	return wall_openings
 
 #input: position of cell
-#output: list of positions to fill according to the cell's open branches
-func get_cells_to_fill(cell) -> Array:
+#output: list of cells to fill according to the cell's open branches, excluding the branch to parent
+func get_cells_to_fill(cell: Vector2i) -> Array:
 	var room_id: int = get_cell_atlas_coords(0, cell).x
-	var open_directions : Array = get_directions(room_id)
+	var open_directions : Array = get_branch_directions_of_room(room_id)
 	var cells_to_fill : Array = convert_direction_to_cell_coords(open_directions, cell)
+	#exclude parent direction from producible directions if it has a parent
+	#this prevents infinite looping back and forth
+	if cell_parent_position.has(cell):
+		cells_to_fill.erase(cell_parent_position[cell])
+	store_cell_data(cells_to_fill, cell)
 	return cells_to_fill
-
 
 #input: room id
 #output: component bit values of id
 #ex: 14 = [2, 4, 8]
-func get_directions(number: int) -> Array:
+func get_branch_directions_of_room(number: int) -> Array:
 	var direction_numbers := [8, 4, 2, 1]
 	var result := []
 
@@ -161,25 +164,19 @@ func get_directions(number: int) -> Array:
 #ex: (0, 0) is a left-right room type, output becomes [(1, 0) (-1, 0)]
 func convert_direction_to_cell_coords(directions: Array, parent_cell: Vector2i) -> Array:
 	var direction_to_coords = {1 : Vector2i.UP, 2 : Vector2i.RIGHT, 4 : Vector2i.DOWN, 8 : Vector2i.LEFT}
-	var coords_to_direction = {Vector2i.UP: 1, Vector2i.RIGHT: 2, Vector2i.DOWN: 4, Vector2i.LEFT: 8}
 	var cells_to_fill = []
-	
-	for i in directions.size():
-		var cell = direction_to_coords[directions[i]] + parent_cell
-		var parent_cell_direction = coords_to_direction[parent_cell - cell]
+	for direction in directions.size():
+		var cell = direction_to_coords[directions[direction]] + parent_cell
 		cells_to_fill.append(cell)
-		store_cell_data(cell, parent_cell, parent_cell_direction)
-
-	#remove parent direction from producible directions if it has a parent
-	#this prevents infinite looping back and forth
-	if cell_parent_position.has(parent_cell):
-		cells_to_fill.erase(cell_parent_position[parent_cell])
 	return cells_to_fill
 
-#stores parenthood data of cells. useful for navigating and backtracking in the future
+#stores parenthood data of cells on two separate dictionaries: one for relative position and one for absolute. 
+#useful for navigating the path to the origin
 #ex: (1, 0) originates from (0, 0), with a direction of left
-func store_cell_data(cell, parent_cell, parent_cell_direction):
-	if !cell_parent_direction.has(cell):
+func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
+	var coords_to_direction = {Vector2i.UP: 1, Vector2i.RIGHT: 2, Vector2i.DOWN: 4, Vector2i.LEFT: 8}
+	for cell in cells_to_fill:
+		var parent_cell_direction = coords_to_direction[parent_cell - cell]
 		cell_parent_direction[cell] = parent_cell_direction
 		cell_parent_position[cell] = parent_cell
 		cell_depth[cell] = cell_depth[parent_cell] + 1
@@ -208,11 +205,10 @@ func get_possible_rooms(input_set: Array, number_to_append: int) -> Array:
 		output_set.append(sum)
 	return output_set
 
-
 #method to spawn temporary nodes
 #occupies opening tiles of produced cell with a placeholder
 #so that other cells dont open towards it and cause conflict
-func mark_cells_to_fill_next(cell):
+func mark_cells_to_fill_next(cell: Vector2i):
 	var cells_to_fill_next = get_cells_to_fill(cell)
 	for cell_to_fill_next in cells_to_fill_next:
 		set_cell(0, cell_to_fill_next, 0, Vector2i.ZERO)
@@ -220,8 +216,9 @@ func mark_cells_to_fill_next(cell):
 
 
 
+#METHODS TO MANIPULATE MAP STRUCTURE
 var room_selection = []
-func manipulate_map(cell, parent_direction):
+func manipulate_map(cell: Vector2i, parent_direction: int):
 	#disable spawning closing rooms if there are few spawnable rooms on the next iteration
 	if cell_depth[cell] > 20:
 		delete_room_from_pool(parent_direction)
@@ -232,18 +229,26 @@ func manipulate_map(cell, parent_direction):
 #	if cell.x > 3:
 #		force_spawn_closing_room(parent_direction)
 	
-	
+
+#input: room added to pool and how many times to add
+#checks if it already exists in the selection by default and only then increases its odds
+#this prevents rooms from spawning room types that mismatch
 func add_room_to_pool(room_id: int, frequency: int):
 	if (room_selection.has(room_id)):
 		while (frequency > 0):
 			room_selection.append(room_id)
 			frequency -= 1
 
+#input: room deleted from pool
+#only deletes the said room if it isnt the only available room to spawn
+#this prevents null error when calling the method that spawns room because the array is empty
 func delete_room_from_pool(room_id: int):
 	if (room_selection.size() > 1):
 		room_selection.erase(room_id)
 
-func force_spawn_closing_room(direction):
+#input: the direction of the room relative to its parent
+#forces the output array to have the room linking to its parent as the only option
+func force_spawn_closing_room(direction: int):
 	room_selection.clear()
 	room_selection.append(direction)
 

@@ -34,7 +34,7 @@ tile_set = SubResource("TileSet_nod23")
 cell_quadrant_size = 80
 format = 2
 script = ExtResource("2_cap21")
-max_tiles = 50
+max_tiles = 300
 icon = ExtResource("3_wv1aq")
 
 [node name="Camera2D" type="Camera2D" parent="."]
