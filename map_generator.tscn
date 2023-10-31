@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://chtt1yshtx2we"]
+
+[ext_resource type="Texture2D" uid="uid://c343d242aco0o" path="res://Art/Rooms/room_tilemaps.png" id="1_s80nf"]
+[ext_resource type="Script" path="res://map_generator.gd" id="2_kp2lc"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4ginc"]
+texture = ExtResource("1_s80nf")
+texture_region_size = Vector2i(80, 80)
+0:0/next_alternative_id = 3
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+10:0/0 = 0
+11:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+14:0/0 = 0
+15:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_nod23"]
+tile_size = Vector2i(80, 80)
+sources/0 = SubResource("TileSetAtlasSource_4ginc")
+
+[node name="Tilemap" type="TileMap"]
+tile_set = SubResource("TileSet_nod23")
+cell_quadrant_size = 80
+format = 2
+script = ExtResource("2_kp2lc")
+max_tiles = 5000
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.1, 0.1)
