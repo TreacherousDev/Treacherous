@@ -5,3 +5,5 @@ res://main/icon.tscn
 res://main/map_generator.tscn
 res://main/map_generator.gd
 res://main/DrawPath.gd
+res://main/map_generator/map_generator.tscn
+res://main/map_generator/map_generator.gd

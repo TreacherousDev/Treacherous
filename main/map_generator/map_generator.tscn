@@ -1,12 +1,12 @@
-[gd_scene load_steps=7 format=3 uid="uid://bnib2lveh832d"]
+[gd_scene load_steps=7 format=3 uid="uid://de2tm30oes8kq"]
 
-[ext_resource type="Texture2D" uid="uid://c343d242aco0o" path="res://main/room_tilemaps.png" id="1_lhtnv"]
-[ext_resource type="Script" path="res://main/map_generator.gd" id="2_cap21"]
-[ext_resource type="Script" path="res://main/DrawPath.gd" id="3_t02dr"]
-[ext_resource type="PackedScene" uid="uid://dr2rslue3b8c0" path="res://main/icon.tscn" id="3_wv1aq"]
+[ext_resource type="Texture2D" uid="uid://c343d242aco0o" path="res://main/room_tilemaps.png" id="1_tv10x"]
+[ext_resource type="Script" path="res://main/map_generator/map_generator.gd" id="2_uhxcg"]
+[ext_resource type="Script" path="res://main/map_generator/draw_path.gd" id="3_lgdg0"]
+[ext_resource type="PackedScene" uid="uid://dr2rslue3b8c0" path="res://main/icon.tscn" id="4_6b1q2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4ginc"]
-texture = ExtResource("1_lhtnv")
+texture = ExtResource("1_tv10x")
 texture_region_size = Vector2i(80, 80)
 0:0/next_alternative_id = 3
 0:0/0 = 0
@@ -34,13 +34,13 @@ sources/0 = SubResource("TileSetAtlasSource_4ginc")
 tile_set = SubResource("TileSet_nod23")
 cell_quadrant_size = 80
 format = 2
-script = ExtResource("2_cap21")
-max_tiles = 200
+script = ExtResource("2_uhxcg")
+max_tiles = 20000
 draw_path = NodePath("DrawPath")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.3, 0.3)
+zoom = Vector2(0.05, 0.05)
 
 [node name="DrawPath" type="Node2D" parent="."]
-script = ExtResource("3_t02dr")
-icon = ExtResource("3_wv1aq")
+script = ExtResource("3_lgdg0")
+icon = ExtResource("4_6b1q2")
