@@ -34,64 +34,93 @@ func _process(_delta):
 	if Input.is_action_just_pressed("ui_accept"):
 		get_tree().reload_current_scene()
 	if Input.is_action_just_pressed("ui_up"):
-		print(cell_parent_direction)
-		print(cell_parent_position)
+		print(active_cells)
 		pass
-	
+
+#draws a path from mouse click to origin
+@export var draw_path: Node2D
 func _input(event):
    # Mouse in viewport coordinates.
 	if event is InputEventMouseButton:
 		if event.is_pressed():
 			var location = local_to_map(get_local_mouse_position())
 			print("Tile Location: ", location)
-			navigate_to_origin(location)
-
-@export var icon: PackedScene
-func navigate_to_origin(location: Vector2i):
-	var current_location = location
-	if !cell_parent_position.has(location):
-		return
-	while cell_parent_position.has(current_location):
-		await get_tree().process_frame
-		var new_icon = icon.instantiate()
-		add_child(new_icon)
-		new_icon.global_position = (current_location * 80) + Vector2i(40, 40)
-		current_location = cell_parent_position[current_location]
+			draw_path.navigate_to_origin(location, cell_parent_position)
 
 var iterator = 0
 func run_algorithm():
 	iterator += 1
 	
-	if iterator % 2 == 0:
+	#this is the internal clock. it sdistributes the algorithm through multiple frames
+	#without this, very large rooms would cause stack overflow
+	#the number is how many times we run the algorithm on a single frame. higher means faster but more memory usage
+	if iterator % 50 == 0:
 		await get_tree().process_frame
-		
+	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
+	shuffle_array_with_seed(active_cells)
 	for cell in active_cells:
 		var cells_to_fill = get_cells_to_fill(cell)
 		#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 		shuffle_array_with_seed(cells_to_fill)
 		
 		for cell_to_fill in cells_to_fill:
-			await get_tree().create_timer(0.2).timeout
+#			await get_tree().create_timer(0.3).timeout
 			next_active_cells.append(cell_to_fill)
-		
 			var wall_openings := get_wall_openings(cell_to_fill)
-			var possible_branch_directions = get_powerset(wall_openings)
-			var parent_direction = cell_parent_direction[cell_to_fill]
-			room_selection = get_possible_rooms(possible_branch_directions, parent_direction)
-			manage_room_spawning(cell_to_fill, parent_direction)
-
+			manage_spawning_conditions(wall_openings, cell_to_fill)
 			tiles_expected_next_iteration -= 1
 			tile_count += 1
-			mark_cells_to_fill_next(cell_to_fill)
+			
 	
+	active_cells.clear()
 	active_cells = next_active_cells
 	next_active_cells = []
 
 	if tiles_expected_next_iteration != 0:
 		run_algorithm()
 	elif tile_count < max_tiles:
-		print("Map generation failed due to active nodes running out prematurely")
+#		print("Map generation failed due to active nodes running out prematurely")
+		expand_map()
 
+#if map gets forced to close by circumstance but the cell count isnt achieved yet, run this algorithm
+#creates an open branch from the available expandable closing rooms
+var expandable_closing_rooms = {}
+func expand_map():
+	var max_depth: int = 0
+	var priority_queue = []
+	var room_to_open
+	var open_directions = []
+
+	#get max depth of dictionary
+	for room in expandable_closing_rooms:
+		var depth = expandable_closing_rooms[room]
+		if depth > max_depth:
+			max_depth = depth
+	
+	while true:
+		#append all rooms with max depth to a priority array
+		for room in expandable_closing_rooms:
+			var depth = expandable_closing_rooms[room]
+			if depth == max_depth:
+				priority_queue.append(room)
+
+		for room in priority_queue:
+			#select the first room that meets the criteria
+			open_directions = get_wall_openings(room)
+			if open_directions.size() >= 2:
+				room_to_open = room
+				break
+		
+		max_depth -= 1
+		if room_to_open != null:
+			break
+		if max_depth == 0:
+			break
+	
+	manage_spawning_conditions(open_directions, room_to_open)
+	run_algorithm()
+	
+	
 #input: array
 #output: the same array with randomized order using Fisher-Yates shuffle algorithm
 #array.shuffle() is not used as it isnt attached to the seed and would make maps irreproducible
@@ -103,16 +132,28 @@ func shuffle_array_with_seed(array: Array):
 		array[j] = temp 
 	return array
 
-#method to spawn rooms
-func manage_room_spawning(cell_to_fill: Vector2i, parent_direction: int):
+
+func manage_spawning_conditions(wall_openings: Array, cell_to_fill: Vector2i):
+	var possible_branch_directions = get_powerset(wall_openings)
+	var parent_direction = cell_parent_direction[cell_to_fill]
+	room_selection = get_possible_rooms(possible_branch_directions, parent_direction)
 	manipulate_map(cell_to_fill, parent_direction)
-	#pick a random available room if tile threshold hasnt been met
+	spawn_rooms(cell_to_fill, parent_direction)
+	mark_cells_to_fill_next(cell_to_fill)
+
+#method to spawn rooms
+func spawn_rooms(cell_to_fill: Vector2i, parent_direction: int):
+	var select_random : int = rng.randi_range(0, room_selection.size() - 1)
+	var room : int = room_selection[select_random]
+	#pick a random available room if max tile threshold hasnt been met
 	#spawn a closing rooms otherwise
 	if tile_count < max_tiles:
-		var select_random = rng.randi_range(0, room_selection.size() - 1)
-		set_cell(0, cell_to_fill, 0, Vector2i(room_selection[select_random], 0))
+		set_cell(0, cell_to_fill, 0, Vector2i(room, 0))
+		if room == parent_direction:
+			expandable_closing_rooms[cell_to_fill] = cell_depth[cell_to_fill]
 	else:
 		set_cell(0, cell_to_fill, 0, Vector2i(parent_direction, 0))
+		expandable_closing_rooms[cell_to_fill] = cell_depth[cell_to_fill]
 
 #input: position of cell
 #checks if each direction relative to that cell is empty
@@ -135,7 +176,7 @@ func get_wall_openings(cell: Vector2i) -> Array:
 func get_cells_to_fill(cell: Vector2i) -> Array:
 	var room_id: int = get_cell_atlas_coords(0, cell).x
 	var open_directions : Array = get_branch_directions_of_room(room_id)
-	var cells_to_fill : Array = convert_direction_to_cell_coords(open_directions, cell)
+	var cells_to_fill : Array = convert_directions_to_cells_coords(open_directions, cell)
 	#exclude parent direction from producible directions if it has a parent
 	#this prevents infinite looping back and forth
 	if cell_parent_position.has(cell):
@@ -162,7 +203,7 @@ func get_branch_directions_of_room(number: int) -> Array:
 #input: parent cell position and directions to branch
 #output: producible cell positions relative to parent
 #ex: (0, 0) is a left-right room type, output becomes [(1, 0) (-1, 0)]
-func convert_direction_to_cell_coords(directions: Array, parent_cell: Vector2i) -> Array:
+func convert_directions_to_cells_coords(directions: Array, parent_cell: Vector2i) -> Array:
 	var direction_to_coords = {1 : Vector2i.UP, 2 : Vector2i.RIGHT, 4 : Vector2i.DOWN, 8 : Vector2i.LEFT}
 	var cells_to_fill = []
 	for direction in directions.size():
@@ -220,11 +261,10 @@ func mark_cells_to_fill_next(cell: Vector2i):
 var room_selection = []
 func manipulate_map(cell: Vector2i, parent_direction: int):
 	#disable spawning closing rooms if there are few spawnable rooms on the next iteration
-	if cell_depth[cell] > 20:
+
+	if tiles_expected_next_iteration < 4:
 		delete_room_from_pool(parent_direction)
-	if tiles_expected_next_iteration < 10:
-		delete_room_from_pool(parent_direction)
-	if tiles_expected_next_iteration > 10:
+	if tiles_expected_next_iteration > 4:
 		force_spawn_closing_room(parent_direction)
 #	if cell.x > 3:
 #		force_spawn_closing_room(parent_direction)
