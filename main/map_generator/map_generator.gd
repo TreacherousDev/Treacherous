@@ -35,6 +35,7 @@ func _process(_delta):
 		get_tree().reload_current_scene()
 	if Input.is_action_just_pressed("ui_up"):
 		print(tile_count)
+		print(cell_parent_direction)
 		print(rng.seed)
 		pass
 
@@ -181,6 +182,7 @@ func get_wall_openings(cell: Vector2i) -> Array:
 
 #input: position of cell
 #output: list of cells to fill according to the cell's open branches, excluding the branch to parent
+#ex: (0,0) -> (0, 1), (1, 0), (-1, 0), (0, -1)
 func get_cells_to_fill(cell: Vector2i) -> Array:
 	var room_id: int = get_cell_atlas_coords(0, cell).x
 	var open_directions : Array = get_branch_directions_of_room(room_id)
@@ -192,9 +194,9 @@ func get_cells_to_fill(cell: Vector2i) -> Array:
 	store_cell_data(cells_to_fill, cell)
 	return cells_to_fill
 
-#input: room id
+#input: room id (1-15, sum of bit values of directions)
 #output: component bit values of id
-#ex: 14 = [2, 4, 8]
+#ex: 14 -> [2, 4, 8]
 func get_branch_directions_of_room(number: int) -> Array:
 	var direction_numbers := [8, 4, 2, 1]
 	var result := []
@@ -220,8 +222,8 @@ func convert_directions_to_cells_coords(directions: Array, parent_cell: Vector2i
 	return cells_to_fill
 
 #stores parenthood data of cells on two separate dictionaries: one for relative position and one for absolute. 
-#useful for navigating the path to the origin
 #ex: (1, 0) originates from (0, 0), with a direction of left
+#useful for knowing which direction a room closes, or for navigating the path to the origin, or more to come
 func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 	var coords_to_direction = {Vector2i.UP: 1, Vector2i.RIGHT: 2, Vector2i.DOWN: 4, Vector2i.LEFT: 8}
 	for cell in cells_to_fill:
