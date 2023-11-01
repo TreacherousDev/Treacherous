@@ -34,7 +34,8 @@ func _process(_delta):
 	if Input.is_action_just_pressed("ui_accept"):
 		get_tree().reload_current_scene()
 	if Input.is_action_just_pressed("ui_up"):
-		print(active_cells)
+		print(tile_count)
+		print(rng.seed)
 		pass
 
 #draws a path from mouse click to origin
@@ -47,22 +48,21 @@ func _input(event):
 			print("Tile Location: ", location)
 			draw_path.navigate_to_origin(location, cell_parent_position)
 
+#MAIN METHOD
 var iterator = 0
 func run_algorithm():
-	iterator += 1
-	
-	#this is the internal clock. it sdistributes the algorithm through multiple frames
+	#this is the internal clock. it distributes the algorithm through multiple frames
 	#without this, very large rooms would cause stack overflow
 	#the number is how many times we run the algorithm on a single frame. higher means faster but more memory usage
-	if iterator % 2 == 0:
+	iterator += 1
+	if iterator % 10 == 0:
 		await get_tree().process_frame
+		
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 	shuffle_array_with_seed(active_cells)
 	for cell in active_cells:
 		var cells_to_fill = get_cells_to_fill(cell)
-		#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 		shuffle_array_with_seed(cells_to_fill)
-		
 		for cell_to_fill in cells_to_fill:
 #			await get_tree().create_timer(0.3).timeout
 			next_active_cells.append(cell_to_fill)
@@ -71,7 +71,7 @@ func run_algorithm():
 			var parent_direction = cell_parent_direction[cell_to_fill]
 			room_selection = get_possible_rooms(possible_branch_directions, parent_direction)
 			manipulate_map(cell_to_fill, parent_direction)
-			spawn_rooms(cell_to_fill, parent_direction)
+			spawn_room(cell_to_fill, parent_direction)
 			mark_cells_to_fill_next(cell_to_fill)
 			
 			tiles_expected_next_iteration -= 1
@@ -85,7 +85,6 @@ func run_algorithm():
 	if tiles_expected_next_iteration != 0:
 		run_algorithm()
 	elif tile_count < max_tiles:
-#		print("Map generation failed due to active nodes running out prematurely")
 		expand_map()
 
 #if map gets forced to close by circumstance but the cell count isnt achieved yet, run this algorithm
@@ -123,16 +122,14 @@ func expand_map():
 		if max_depth == 0:
 			break
 
-#	print("b")
 	active_cells.clear()
 	active_cells.append(room_to_open)
 	expandable_closing_rooms.erase(room_to_open)
-	print(room_to_open)
 	var possible_branch_directions = get_powerset(open_directions)
 	var parent_direction = cell_parent_direction[room_to_open]
 	room_selection = get_possible_rooms(possible_branch_directions, parent_direction)
 	delete_room_from_pool(parent_direction)
-	spawn_rooms(room_to_open, parent_direction)
+	spawn_room(room_to_open, parent_direction)
 	mark_cells_to_fill_next(room_to_open)
 	run_algorithm()
 	
@@ -149,12 +146,15 @@ func shuffle_array_with_seed(array: Array):
 	return array
 
 
-#method to spawn rooms
-func spawn_rooms(cell_to_fill: Vector2i, parent_direction: int):
+#METHOD TO SPAWN ROOMS
+#pick a random available room if max tile threshold hasnt been met
+#spawn a closing rooms otherwise
+#add closing rooom to expandable_closing_rooms so that it can be used as a reference
+#to expand the map, instead of traversing through every tile in the map which is way more costly
+#see expand_map()
+func spawn_room(cell_to_fill: Vector2i, parent_direction: int):
 	var select_random : int = rng.randi_range(0, room_selection.size() - 1)
 	var room : int = room_selection[select_random]
-	#pick a random available room if max tile threshold hasnt been met
-	#spawn a closing rooms otherwise
 	if tile_count < max_tiles:
 		set_cell(0, cell_to_fill, 0, Vector2i(room, 0))
 		if room == parent_direction:
