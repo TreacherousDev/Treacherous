@@ -35,7 +35,7 @@ tile_set = SubResource("TileSet_nod23")
 cell_quadrant_size = 80
 format = 2
 script = ExtResource("2_uhxcg")
-max_tiles = 10000
+max_tiles = 20000
 draw_path = NodePath("DrawPath")
 
 [node name="Camera2D" type="Camera2D" parent="."]
