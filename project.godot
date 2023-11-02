@@ -11,8 +11,15 @@ config_version=5
 [application]
 
 config/name="CPG Tilemap System"
+run/main_scene="res://main/map_generator/map_generator.tscn"
 config/features=PackedStringArray("4.0", "Forward Plus")
 config/icon="res://main/icon.svg"
+
+[display]
+
+window/size/viewport_width=1866
+window/size/viewport_height=956
+window/size/mode=2
 
 [rendering]
 
