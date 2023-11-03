@@ -318,7 +318,9 @@ var max_cell_depth : int = 0
 var expandable_closing_rooms = {}
 func expand_map():
 	var room_to_open := get_room_to_open()
-
+	if room_to_open == Vector2i.ZERO:
+		print("The chance of this happening is infinitely small, but look, you did it!")
+		return
 	active_cells.clear()
 	active_cells.append(room_to_open)
 	expandable_closing_rooms.erase(room_to_open)
@@ -337,6 +339,12 @@ func expand_map():
 #custom: starts from a cdeclared cell depth, then searches up and down from there
 func get_room_to_open() -> Vector2i:
 	var room_to_open := Vector2i.ZERO
+	
+	#on very ultra rare cases (that are still technically possible), there wont be any expandable closing rooms
+	#so we return early and print an error after
+	if expandable_closing_rooms.size() == 0:
+		return Vector2i.ZERO
+	
 	match expand_mode:
 		expand_modes.MAX:
 			var from_max_depth: int = max_cell_depth
@@ -367,7 +375,7 @@ func get_room_to_open() -> Vector2i:
 
 #FIND ROOM TO OPEN
 #input: depth
-#output: random cell that matches depth, or Vector2.ZERO if none is found
+#output: random cell that matches depth, or Vector2i.ZERO if none is found
 func find_room_to_open(depth_to_match: int) -> Vector2i:
 	var filtered_rooms = expandable_closing_rooms.keys().filter(func(room): return cell_depth[room] == depth_to_match)
 	if filtered_rooms.size() > 0:
@@ -393,29 +401,16 @@ func add_to_expandable_closing_rooms(room):
 
 #UPDATE NEIGHBOR CLOSING ROOM
 #called for every cell in "mark_cells_to_fill_next()"
-#checks if the neighbor of the cell is a closing room, and subtracts 1 from the open directions of said neighbor
-#after it occupies its own cell. 
-#
-#this is a very cheap way to update the available open directions of every closing room as we only update those
+#checks if the neighbor of the cell is an expandable closing room, and subtracts 1 from the open directions of said neighbor
+#because it will occupy one of that cell's direction on the next iteration
+#also checks if the expandable closing room has less than 2 openings left after subtracting, and removes it from the list if true
+#this is a very cheap way to update the available open directions of every expandable closing room as we only update those
 #that are direct neighbors of recently to-be-added rooms
 func update_neighbor_closing_room(room):
-	var room_up: Vector2i  = room + Vector2i.UP
-	if expandable_closing_rooms.has(room_up):
-		expandable_closing_rooms[room_up] -= 1
-		if expandable_closing_rooms[room_up] ==  1:
-			expandable_closing_rooms.erase(room_up)
-	var room_right: Vector2i  = room + Vector2i.RIGHT
-	if expandable_closing_rooms.has(room_right):
-		expandable_closing_rooms[room_right] -= 1
-		if expandable_closing_rooms[room_right] ==  1:
-			expandable_closing_rooms.erase(room_right)
-	var room_down: Vector2i  = room + Vector2i.DOWN
-	if expandable_closing_rooms.has(room_down):
-		expandable_closing_rooms[room_down] -= 1
-		if expandable_closing_rooms[room_down] ==  1:
-			expandable_closing_rooms.erase(room_down)
-	var room_left: Vector2i  = room + Vector2i.LEFT
-	if expandable_closing_rooms.has(room_left):
-		expandable_closing_rooms[room_left] -= 1
-		if expandable_closing_rooms[room_left] ==  1:
-			expandable_closing_rooms.erase(room_left)
+	var directions = [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
+	for direction in directions:
+		var neighbor_room = room + direction
+		if expandable_closing_rooms.has(neighbor_room):
+			expandable_closing_rooms[neighbor_room] -= 1
+			if expandable_closing_rooms[neighbor_room] >= 2:
+				expandable_closing_rooms.erase(neighbor_room)
