@@ -119,12 +119,10 @@ func spawn_room(cell_to_fill: Vector2i, parent_direction: int, room_selection: A
 	if tile_count + tiles_expected_next_iteration < max_tiles:
 		set_cell(0, cell_to_fill, 0, Vector2i(selected_room, 0))
 		if selected_room == parent_direction:
-			closing_rooms.append(cell_to_fill)
-			set_open_directions_of_closing_room(cell_to_fill)
+			add_to_expandable_closing_rooms(cell_to_fill)
 	else:
 		set_cell(0, cell_to_fill, 0, Vector2i(parent_direction, 0))
-		closing_rooms.append(cell_to_fill)
-		set_open_directions_of_closing_room(cell_to_fill)
+		add_to_expandable_closing_rooms(cell_to_fill)
 	
 	mark_cells_to_fill_next(cell_to_fill)
 	#track max cell depth
@@ -317,14 +315,13 @@ func force_spawn_closing_room(direction: int, room_selection: Array):
 enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
 @export var expand_mode = expand_modes.MAX
 var max_cell_depth : int = 0
-var closing_rooms = []
+var expandable_closing_rooms = {}
 func expand_map():
 	var room_to_open := get_room_to_open()
 
 	active_cells.clear()
 	active_cells.append(room_to_open)
-	closing_rooms.erase(room_to_open)
-	closing_room_open_directions.erase(room_to_open)
+	expandable_closing_rooms.erase(room_to_open)
 	
 	var parent_direction = cell_parent_direction[room_to_open]
 	var room_selection = get_room_selection(room_to_open)
@@ -352,10 +349,11 @@ func get_room_to_open() -> Vector2i:
 				room_to_open = find_room_to_open(from_min_depth)
 				from_min_depth += 1
 		expand_modes.RANDOM:
-			var selection = closing_rooms.filter(func(room): return closing_room_open_directions[room] >= 2)
+			var selection = expandable_closing_rooms.keys()
 			var max = selection.size() - 1
 			var select_random = rng.randi_range(0, max)
-			room_to_open = selection[select_random]
+			var random_room = selection[select_random]
+			room_to_open = random_room
 		expand_modes.CUSTOM:
 			var from_custom_depth: int = max_cell_depth / 2
 			var counter = 1
@@ -371,8 +369,7 @@ func get_room_to_open() -> Vector2i:
 #input: depth
 #output: random cell that matches depth, or Vector2.ZERO if none is found
 func find_room_to_open(depth_to_match: int) -> Vector2i:
-	var expandable_closing_rooms = closing_rooms.filter(func(room): return closing_room_open_directions[room] >= 2)
-	var filtered_rooms = expandable_closing_rooms.filter(func(room): return cell_depth[room] == depth_to_match)
+	var filtered_rooms = expandable_closing_rooms.keys().filter(func(room): return cell_depth[room] == depth_to_match)
 	if filtered_rooms.size() > 0:
 		return select_random_element(filtered_rooms)
 	return Vector2i.ZERO
@@ -388,10 +385,11 @@ func select_random_element(array: Array):
 
 #CLOSING ROOM OPEN DIRECTIONS
 #reuses wall_openings but takes the number of elements instead of its individual elements
-var closing_room_open_directions = {}
-func set_open_directions_of_closing_room(room):
+#adds it to dictionary if it has at least 2 open directions
+func add_to_expandable_closing_rooms(room):
 	var open_directions = get_wall_openings(room).size()
-	closing_room_open_directions[room] = open_directions
+	if open_directions >= 2:
+		expandable_closing_rooms[room] = open_directions
 
 #UPDATE NEIGHBOR CLOSING ROOM
 #called for every cell in "mark_cells_to_fill_next()"
@@ -402,14 +400,22 @@ func set_open_directions_of_closing_room(room):
 #that are direct neighbors of recently to-be-added rooms
 func update_neighbor_closing_room(room):
 	var room_up: Vector2i  = room + Vector2i.UP
-	if closing_rooms.has(room_up):
-		closing_room_open_directions[room_up] -= 1
+	if expandable_closing_rooms.has(room_up):
+		expandable_closing_rooms[room_up] -= 1
+		if expandable_closing_rooms[room_up] ==  1:
+			expandable_closing_rooms.erase(room_up)
 	var room_right: Vector2i  = room + Vector2i.RIGHT
-	if closing_rooms.has(room_right):
-		closing_room_open_directions[room_right] -= 1
+	if expandable_closing_rooms.has(room_right):
+		expandable_closing_rooms[room_right] -= 1
+		if expandable_closing_rooms[room_right] ==  1:
+			expandable_closing_rooms.erase(room_right)
 	var room_down: Vector2i  = room + Vector2i.DOWN
-	if closing_rooms.has(room_down):
-		closing_room_open_directions[room_down] -= 1
+	if expandable_closing_rooms.has(room_down):
+		expandable_closing_rooms[room_down] -= 1
+		if expandable_closing_rooms[room_down] ==  1:
+			expandable_closing_rooms.erase(room_down)
 	var room_left: Vector2i  = room + Vector2i.LEFT
-	if closing_rooms.has(room_left):
-		closing_room_open_directions[room_left] -= 1
+	if expandable_closing_rooms.has(room_left):
+		expandable_closing_rooms[room_left] -= 1
+		if expandable_closing_rooms[room_left] ==  1:
+			expandable_closing_rooms.erase(room_left)
