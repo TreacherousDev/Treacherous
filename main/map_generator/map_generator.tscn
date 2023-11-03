@@ -1,43 +1,18 @@
-[gd_scene load_steps=7 format=3 uid="uid://de2tm30oes8kq"]
+[gd_scene load_steps=5 format=3 uid="uid://de2tm30oes8kq"]
 
-[ext_resource type="Texture2D" uid="uid://c343d242aco0o" path="res://main/room_tilemaps.png" id="1_tv10x"]
+[ext_resource type="TileSet" uid="uid://16ab7u2fffpn" path="res://main/map_generator/map_generator.tres" id="1_w8utq"]
 [ext_resource type="Script" path="res://main/map_generator/map_generator.gd" id="2_uhxcg"]
 [ext_resource type="Script" path="res://main/map_generator/draw_path.gd" id="3_lgdg0"]
 [ext_resource type="PackedScene" uid="uid://dr2rslue3b8c0" path="res://main/icon.tscn" id="4_6b1q2"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4ginc"]
-texture = ExtResource("1_tv10x")
-texture_region_size = Vector2i(80, 80)
-0:0/next_alternative_id = 3
-0:0/0 = 0
-1:0/0 = 0
-2:0/0 = 0
-3:0/0 = 0
-4:0/0 = 0
-5:0/0 = 0
-6:0/0 = 0
-7:0/0 = 0
-8:0/0 = 0
-9:0/0 = 0
-10:0/0 = 0
-11:0/0 = 0
-12:0/0 = 0
-13:0/0 = 0
-14:0/0 = 0
-15:0/0 = 0
-
-[sub_resource type="TileSet" id="TileSet_nod23"]
-tile_size = Vector2i(80, 80)
-sources/0 = SubResource("TileSetAtlasSource_4ginc")
-
 [node name="Tilemap" type="TileMap" node_paths=PackedStringArray("draw_path")]
-tile_set = SubResource("TileSet_nod23")
+tile_set = ExtResource("1_w8utq")
 cell_quadrant_size = 80
 format = 2
 script = ExtResource("2_uhxcg")
-max_tiles = 20000
+max_tiles = 10000
 draw_path = NodePath("DrawPath")
-batch_size = 8
+batch_size = 7
 expand_mode = 3
 
 [node name="Camera2D" type="Camera2D" parent="."]

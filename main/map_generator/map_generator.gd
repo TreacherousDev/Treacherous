@@ -16,9 +16,11 @@ var tile_count = 0
 
 func _ready():
 	randomize()
-	rng.set_seed(randi())
+	rng.set_seed(2844237709)
 	start()
 
+#START METHOD
+#initialzes the algorithm from the origin
 func start():
 	const starting_room_position = Vector2i.ZERO
 	var starting_room_id = 15
@@ -28,13 +30,13 @@ func start():
 	active_cells.append(starting_room_position)
 	run_algorithm()
 
+
 func _process(_delta):
 	if Input.is_action_just_pressed("ui_accept"):
 		get_tree().reload_current_scene()
 	if Input.is_action_just_pressed("ui_up"):
 		print(tile_count)
 		print(rng.seed)
-		pass
 
 #draws a path from mouse click to origin
 @export var draw_path: Node2D
@@ -272,7 +274,7 @@ func manipulate_map(cell: Vector2i, parent_direction: int, room_selection: Array
 	#disable spawning closing rooms if there are few spawnable rooms on the next iteration
 #	if tiles_expected_next_iteration < 3:
 #		delete_room_from_pool(parent_direction, room_selection)
-	if tiles_expected_next_iteration > 6:
+	if tiles_expected_next_iteration > 10:
 		force_spawn_closing_room(parent_direction, room_selection)
 #	if cell.x > 3:
 #		force_spawn_closing_room(parent_direction)

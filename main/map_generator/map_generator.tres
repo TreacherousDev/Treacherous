@@ -1,0 +1,28 @@
+[gd_resource type="TileSet" load_steps=3 format=3 uid="uid://16ab7u2fffpn"]
+
+[ext_resource type="Texture2D" uid="uid://c343d242aco0o" path="res://main/room_tilemaps.png" id="1_8gv1v"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4ginc"]
+texture = ExtResource("1_8gv1v")
+texture_region_size = Vector2i(80, 80)
+0:0/next_alternative_id = 3
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+10:0/0 = 0
+11:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+14:0/0 = 0
+15:0/0 = 0
+
+[resource]
+tile_size = Vector2i(80, 80)
+sources/0 = SubResource("TileSetAtlasSource_4ginc")
