@@ -16,18 +16,16 @@ var tile_count = 0
 
 func _ready():
 	randomize()
-	rng.set_seed(1)
+	rng.set_seed(3)
 	start()
 
 func start():
-	var origin = Vector2i.ZERO
-	var first_room = 15
-	set_cell(0, origin, 0, Vector2i(first_room, 0))
-#	cell_parent_position[origin] = null
-#	cell_parent_direction[origin] = null
-	cell_depth[origin] = 0
-	mark_cells_to_fill_next(Vector2i(0, 0))
-	active_cells.append(Vector2i(0,0))
+	const starting_room_position = Vector2i.ZERO
+	var starting_room_id = 15
+	set_cell(0, starting_room_position, 0, Vector2i(starting_room_id, 0))
+	cell_depth[starting_room_position] = 0
+	mark_cells_to_fill_next(starting_room_position)
+	active_cells.append(starting_room_position)
 	run_algorithm()
 
 func _process(_delta):
@@ -46,16 +44,22 @@ func _input(event):
 		if event.is_pressed():
 			var location = local_to_map(get_local_mouse_position())
 			print("Tile Location: ", location)
-			draw_path.navigate_to_origin(location, cell_parent_position)
+			draw_path.navigate_to_origin(location, cell_parent_position, tile_set.tile_size)
 
-#MAIN METHOD
-var iterator = 0
+
+
+#############
+# MAIN LOOP #
+#############
+
+var iterations = 0
+@export var batch_size : int = 1
 func run_algorithm():
 	#this is the internal clock. it distributes the algorithm through multiple frames
-	#without this, very large rooms would cause stack overflow
-	#the number is how many times we run the algorithm on a single frame. higher means faster but more memory usage
-	iterator += 1
-	if iterator % 15 == 0:
+	#without this, very large maps would cause stack overflow
+	#the batch size is how many times we run the algorithm on a single frame. higher means faster but more memory usage
+	iterations += 1
+	if iterations % batch_size == 0:
 		await get_tree().process_frame
 		
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
@@ -64,7 +68,7 @@ func run_algorithm():
 		var cells_to_fill = get_cells_to_fill(cell)
 		shuffle_array_with_seed(cells_to_fill)
 		for cell_to_fill in cells_to_fill:
-#			await get_tree().create_timer(0.3).timeout
+			
 			next_active_cells.append(cell_to_fill)
 			var parent_direction = cell_parent_direction[cell_to_fill]
 			var room_selection = get_room_selection(cell_to_fill)
@@ -83,108 +87,6 @@ func run_algorithm():
 	elif tile_count < max_tiles:
 		expand_map()
 
-#EXPAND MAP
-#if map gets forced to close by circumstance but the cell count isnt achieved yet, run this algorithm
-#creates an open branch from the available expandable closing rooms
-#this might need to be refactored in the future
-enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
-@export var expand_mode = expand_modes.MAX
-var max_cell_depth : int = 0
-var closing_rooms = []
-func expand_map():
-	var room_to_open := get_room_to_open()
-
-	active_cells.clear()
-	active_cells.append(room_to_open)
-	closing_rooms.erase(room_to_open)
-	closing_room_open_directions.erase(room_to_open)
-	
-	var parent_direction = cell_parent_direction[room_to_open]
-	var room_selection = get_room_selection(room_to_open)
-	delete_room_from_pool(parent_direction, room_selection)
-	spawn_room(room_to_open, parent_direction, room_selection)
-	run_algorithm()
-
-#EXPAND BY MODE
-#searches for expandable closing room according to mode
-#max: starts at max depth and searches down
-#min: starts at min depth and searches up
-#random: picks a random available expandable closing room
-#custom: starts from a cdeclared cell depth, then searches up and down from there
-func get_room_to_open() -> Vector2i:
-	var room_to_open := Vector2i.ZERO
-	match expand_mode:
-		expand_modes.MAX:
-			var from_max_depth: int = max_cell_depth
-			while room_to_open == Vector2i.ZERO:
-				room_to_open = find_room_to_open(from_max_depth)
-				from_max_depth -= 1
-		expand_modes.MIN: 
-			var from_min_depth: int = 1
-			while room_to_open == Vector2i.ZERO:
-				room_to_open = find_room_to_open(from_min_depth)
-				from_min_depth += 1
-		expand_modes.RANDOM:
-			var selection = closing_rooms.filter(func(room): return closing_room_open_directions[room] >= 2)
-			var max = selection.size() - 1
-			var select_random = rng.randi_range(0, max)
-			room_to_open = selection[select_random]
-		expand_modes.CUSTOM:
-			var from_custom_depth: int = max_cell_depth / 2
-			var counter = 1
-			while room_to_open == Vector2i.ZERO:
-				room_to_open = find_room_to_open(from_custom_depth)
-				from_custom_depth += counter
-				from_custom_depth = clamp(from_custom_depth, 1, max_cell_depth)
-				counter += 1 if counter > 0 else -1
-				counter = -counter
-	return room_to_open
-#FIND ROOM TO OPEN
-#input: depth
-#output: random cell that matches depth, or Vector2.ZERO if none is found
-func find_room_to_open(depth_to_match: int) -> Vector2i:
-	var expandable_closing_rooms = closing_rooms.filter(func(room): return closing_room_open_directions[room] >= 2)
-	var filtered_rooms = expandable_closing_rooms.filter(func(room): return cell_depth[room] == depth_to_match)
-	if filtered_rooms.size() > 0:
-		return select_random_element(filtered_rooms)
-	return Vector2i.ZERO
-
-#SELECT RANDOM ELEMENT
-#input: array
-#output: random element inside the array
-func select_random_element(array: Array):
-	var max: int = array.size() - 1
-	var select_random : int = rng.randi_range(0, max)
-	var selected_element = array[select_random]
-	return selected_element
-
-#CLOSING ROOM OPEN DIRECTIONS
-#reuses wall_openings but takes the number of elements instead of its individual elements
-var closing_room_open_directions = {}
-func set_open_directions_of_closing_room(room):
-	var open_directions = get_wall_openings(room).size()
-	closing_room_open_directions[room] = open_directions
-
-#UPDATE NEIGHBOR CLOSING ROOM
-#called for every cell in "mark_cells_to_fill_next()"
-#checks if the neighbor of the cell is a closing room, and subtracts 1 from the open directions of said neighbor
-#after it occupies its own cell. 
-#
-#this is a very cheap way to update the available open directions of every closing room as we only update those
-#that are direct neighbors of recently to-be-added rooms
-func update_neighbor_closing_room(room):
-	var room_up: Vector2i  = room + Vector2i.UP
-	if closing_rooms.has(room_up):
-		closing_room_open_directions[room_up] -= 1
-	var room_right: Vector2i  = room + Vector2i.RIGHT
-	if closing_rooms.has(room_right):
-		closing_room_open_directions[room_right] -= 1
-	var room_down: Vector2i  = room + Vector2i.DOWN
-	if closing_rooms.has(room_down):
-		closing_room_open_directions[room_down] -= 1
-	var room_left: Vector2i  = room + Vector2i.LEFT
-	if closing_rooms.has(room_left):
-		closing_room_open_directions[room_left] -= 1
 	
 #SHUFFLE ARRAY
 #input: array
@@ -197,6 +99,12 @@ func shuffle_array_with_seed(array: Array):
 		array[i] = array[j]
 		array[j] = temp 
 	return array
+
+
+
+##################
+# CORE FUNCTIONS #
+##################
 
 #SPAWN ROOMS
 #pick a random available room if max tile threshold hasnt been met
@@ -352,7 +260,11 @@ func mark_cells_to_fill_next(cell: Vector2i):
 		update_neighbor_closing_room(cell_to_fill_next)
 
 
-#METHODS TO MANIPULATE MAP STRUCTURE
+
+
+#########################################
+# FUNCTIONS TO MANIPULATE MAP STRUCTURE #
+#########################################
 
 #MANIPULATE MAP
 #all methods to manipulate map structure goes here
@@ -391,3 +303,113 @@ func force_spawn_closing_room(direction: int, room_selection: Array):
 	room_selection.clear()
 	room_selection.append(direction)
 
+
+
+
+########################################
+# FUNCTIONS FOR HANDLING MAP EXPANSION #
+########################################
+
+#EXPAND MAP
+#if map gets forced to close by circumstance but the cell count isnt achieved yet, run this algorithm
+#creates an open branch from the available expandable closing rooms
+#this might need to be refactored in the future
+enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
+@export var expand_mode = expand_modes.MAX
+var max_cell_depth : int = 0
+var closing_rooms = []
+func expand_map():
+	var room_to_open := get_room_to_open()
+
+	active_cells.clear()
+	active_cells.append(room_to_open)
+	closing_rooms.erase(room_to_open)
+	closing_room_open_directions.erase(room_to_open)
+	
+	var parent_direction = cell_parent_direction[room_to_open]
+	var room_selection = get_room_selection(room_to_open)
+	delete_room_from_pool(parent_direction, room_selection)
+	spawn_room(room_to_open, parent_direction, room_selection)
+	run_algorithm()
+
+#GET ROOM TO OPEN
+#searches for expandable closing room according to mode
+#max: starts at max depth and searches down
+#min: starts at min depth and searches up
+#random: picks a random available expandable closing room
+#custom: starts from a cdeclared cell depth, then searches up and down from there
+func get_room_to_open() -> Vector2i:
+	var room_to_open := Vector2i.ZERO
+	match expand_mode:
+		expand_modes.MAX:
+			var from_max_depth: int = max_cell_depth
+			while room_to_open == Vector2i.ZERO:
+				room_to_open = find_room_to_open(from_max_depth)
+				from_max_depth -= 1
+		expand_modes.MIN: 
+			var from_min_depth: int = 1
+			while room_to_open == Vector2i.ZERO:
+				room_to_open = find_room_to_open(from_min_depth)
+				from_min_depth += 1
+		expand_modes.RANDOM:
+			var selection = closing_rooms.filter(func(room): return closing_room_open_directions[room] >= 2)
+			var max = selection.size() - 1
+			var select_random = rng.randi_range(0, max)
+			room_to_open = selection[select_random]
+		expand_modes.CUSTOM:
+			var from_custom_depth: int = max_cell_depth / 2
+			var counter = 1
+			while room_to_open == Vector2i.ZERO:
+				room_to_open = find_room_to_open(from_custom_depth)
+				from_custom_depth += counter
+				from_custom_depth = clamp(from_custom_depth, 1, max_cell_depth)
+				counter += 1 if counter > 0 else -1
+				counter = -counter
+	return room_to_open
+
+#FIND ROOM TO OPEN
+#input: depth
+#output: random cell that matches depth, or Vector2.ZERO if none is found
+func find_room_to_open(depth_to_match: int) -> Vector2i:
+	var expandable_closing_rooms = closing_rooms.filter(func(room): return closing_room_open_directions[room] >= 2)
+	var filtered_rooms = expandable_closing_rooms.filter(func(room): return cell_depth[room] == depth_to_match)
+	if filtered_rooms.size() > 0:
+		return select_random_element(filtered_rooms)
+	return Vector2i.ZERO
+
+#SELECT RANDOM ELEMENT
+#input: array
+#output: random element inside the array
+func select_random_element(array: Array):
+	var max: int = array.size() - 1
+	var select_random : int = rng.randi_range(0, max)
+	var selected_element = array[select_random]
+	return selected_element
+
+#CLOSING ROOM OPEN DIRECTIONS
+#reuses wall_openings but takes the number of elements instead of its individual elements
+var closing_room_open_directions = {}
+func set_open_directions_of_closing_room(room):
+	var open_directions = get_wall_openings(room).size()
+	closing_room_open_directions[room] = open_directions
+
+#UPDATE NEIGHBOR CLOSING ROOM
+#called for every cell in "mark_cells_to_fill_next()"
+#checks if the neighbor of the cell is a closing room, and subtracts 1 from the open directions of said neighbor
+#after it occupies its own cell. 
+#
+#this is a very cheap way to update the available open directions of every closing room as we only update those
+#that are direct neighbors of recently to-be-added rooms
+func update_neighbor_closing_room(room):
+	var room_up: Vector2i  = room + Vector2i.UP
+	if closing_rooms.has(room_up):
+		closing_room_open_directions[room_up] -= 1
+	var room_right: Vector2i  = room + Vector2i.RIGHT
+	if closing_rooms.has(room_right):
+		closing_room_open_directions[room_right] -= 1
+	var room_down: Vector2i  = room + Vector2i.DOWN
+	if closing_rooms.has(room_down):
+		closing_room_open_directions[room_down] -= 1
+	var room_left: Vector2i  = room + Vector2i.LEFT
+	if closing_rooms.has(room_left):
+		closing_room_open_directions[room_left] -= 1
