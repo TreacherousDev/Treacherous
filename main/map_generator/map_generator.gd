@@ -40,6 +40,9 @@ func _process(_delta):
 	if Input.is_action_just_pressed("ui_up"):
 		print(tile_count)
 		print(rng.seed)
+		print(closing_rooms.size())
+		print(expandable_closing_rooms.size())
+		print(expandable_closing_rooms_by_depth.size())
 
 #draws a path from mouse click to origin
 @export var draw_path: Node2D
@@ -67,17 +70,16 @@ func run_algorithm():
 		await get_tree().process_frame
 		
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
-	shuffle_array_with_seed(active_cells)
+	active_cells = shuffle_array_with_seed(active_cells)
 	for cell in active_cells:
 		var cells_to_fill = get_cells_to_fill(cell)
-		shuffle_array_with_seed(cells_to_fill)
+		cells_to_fill = shuffle_array_with_seed(cells_to_fill)
 		for cell_to_fill in cells_to_fill:
 			
 			next_active_cells.append(cell_to_fill)
-			var parent_direction = cell_parent_direction[cell_to_fill]
 			var room_selection = get_room_selection(cell_to_fill)
-			manipulate_map(cell_to_fill, parent_direction, room_selection)
-			spawn_room(cell_to_fill, parent_direction, room_selection)
+			manipulate_map(cell_to_fill, room_selection)
+			spawn_room(cell_to_fill, room_selection)
 			
 			tiles_expected_next_iteration -= 1
 			tile_count += 1
@@ -119,18 +121,17 @@ func shuffle_array_with_seed(array: Array):
 #add closing rooom to expandable_closing_rooms so that it can be used as a reference
 #to expand the map, instead of traversing through every tile in the map which is way more costly
 #see expand_map()
-func spawn_room(cell_to_fill: Vector2i, parent_direction: int, room_selection: Array):
+func spawn_room(cell_to_fill: Vector2i, room_selection: Array):
 	var select_random : int = rng.randi_range(0, room_selection.size() - 1)
 	var selected_room : int = room_selection[select_random]
+	var parent_direction : int = cell_parent_direction[cell_to_fill]
 	if tile_count + tiles_expected_next_iteration < max_tiles:
 		set_cell(0, cell_to_fill, 0, Vector2i(selected_room, 0))
 		if selected_room == parent_direction:
-			closing_rooms.append(cell_to_fill)
-			add_to_expandable_closing_rooms(cell_to_fill)
+			add_to_closing_rooms_and_check_expandability(cell_to_fill)
 	else:
 		set_cell(0, cell_to_fill, 0, Vector2i(parent_direction, 0))
-		closing_rooms.append(cell_to_fill)
-		add_to_expandable_closing_rooms(cell_to_fill)
+		add_to_closing_rooms_and_check_expandability(cell_to_fill)
 	
 	mark_cells_to_fill_next(cell_to_fill)
 	#track max cell depth
@@ -274,11 +275,12 @@ func mark_cells_to_fill_next(cell: Vector2i):
 
 #MANIPULATE MAP
 #all methods to manipulate map structure goes here
-func manipulate_map(cell: Vector2i, parent_direction: int, room_selection: Array):
+func manipulate_map(cell: Vector2i, room_selection: Array):
+	var parent_direction: int = cell_parent_direction[cell]
 	#disable spawning closing rooms if there are few spawnable rooms on the next iteration
-#	if tiles_expected_next_iteration < 6:
-#		delete_room_from_pool(parent_direction, room_selection)
-	if tiles_expected_next_iteration > pow(tile_count, 1/3) * 15:
+	if tiles_expected_next_iteration < 2:
+		delete_room_from_pool(parent_direction, room_selection)
+	if tiles_expected_next_iteration > 2:
 		force_spawn_closing_room(parent_direction, room_selection)
 #	if cell.x > 3:
 #		force_spawn_closing_room(parent_direction)
@@ -323,6 +325,7 @@ enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
 @export var expand_mode = expand_modes.MAX
 var max_cell_depth : int = 0
 var closing_rooms = []
+var expandable_closing_rooms = {}
 var expandable_closing_rooms_by_depth = {}
 var expand_count : int = 0
 func expand_map():
@@ -331,17 +334,16 @@ func expand_map():
 	if room_to_open == Vector2i.ZERO:
 		print("The chance of this happening is infinitely small, but look, you did it!")
 		return
+
 	active_cells.clear()
 	active_cells.append(room_to_open)
 	closing_rooms.erase(room_to_open)
-	expandable_closing_rooms_by_depth[cell_depth[room_to_open]].erase(room_to_open)
-	if expandable_closing_rooms_by_depth[cell_depth[room_to_open]].size() == 0:
-		expandable_closing_rooms_by_depth.erase(cell_depth[room_to_open])
+	set_closing_room_as_non_expandable(room_to_open)
 	
 	var parent_direction = cell_parent_direction[room_to_open]
 	var room_selection = get_room_selection(room_to_open)
 	delete_room_from_pool(parent_direction, room_selection)
-	spawn_room(room_to_open, parent_direction, room_selection)
+	spawn_room(room_to_open, room_selection)
 	run_algorithm()
 
 #GET ROOM TO OPEN
@@ -405,6 +407,26 @@ func select_random_element(array: Array):
 	var selected_element = array[select_random]
 	return selected_element
 
+
+#####################################
+# FUNCTIONS TO MANAGE CLOSING ROOMS #
+#####################################
+
+#ADD TO CLOSING ROOMS AND CHECK EXPANDABILITY
+#called every time a room spawned in spawn_rooms() is a closing room
+#appends the closing room to the closing_room array and checks if it is expandable
+#adds it to the expandable_closing_room and expandable_closing_room_by_depth dictionaries if returns true
+func add_to_closing_rooms_and_check_expandability(room: Vector2i):
+	closing_rooms.append(room)
+	var opening_directions = get_wall_openings(room).size()
+	if opening_directions >= 2:
+		expandable_closing_rooms[room] = opening_directions
+		var depth = cell_depth[room]
+		if expandable_closing_rooms_by_depth.has(depth):
+			expandable_closing_rooms_by_depth[depth].append(room)
+		else:
+			expandable_closing_rooms_by_depth[depth] = [room]
+
 #CLOSING ROOM OPEN DIRECTIONS
 #reuses wall_openings but takes the number of elements instead of its individual elements
 #adds it to dictionary if it has at least 2 open directions
@@ -417,32 +439,33 @@ func add_to_expandable_closing_rooms(room):
 		else:
 			expandable_closing_rooms_by_depth[depth] = [room]
 
-
-#UPDATE NEIGHBOR CLOSING ROOM
+#CHECK IF NEIGHBOR IS EXPANDABLE CLOSING ROOM
 #called for every cell in "mark_cells_to_fill_next()"
-#checks if the neighbor of the cell is an expandable closing room, and updates the opening directions of the room
-#also checks if the expandable closing room has less than 2 openings left after updating, and removes it from the list if true
-#this is a very cheap way to update the available open directions of every expandable closing room as we only update those
-#that are direct neighbors of recently to-be-added rooms
-func update_neighbor_closing_room(neighbor):
-	var opening_count = get_wall_openings(neighbor).size()
-	if opening_count >= 2:
-		return #
-	var depth = cell_depth[neighbor]
-	expandable_closing_rooms_by_depth[depth].erase(neighbor)
-	if expandable_closing_rooms_by_depth[depth].size() == 0:
-		expandable_closing_rooms_by_depth.erase(depth)
-
+#checks all 4 von neumann neighbors of the cell if it is an expandable closing room, 
+#and updates the opening directions of the room if it is
 func check_if_neighbor_is_expandable_closing_room(room):
 	var directions = [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
 	for direction in directions:
 		var neighbor = room + direction
-		if !closing_rooms.has(neighbor):
-			return #not a closing room
-		var depth = cell_depth[neighbor]
-		if !expandable_closing_rooms_by_depth.has(depth):
-			return #depth batch of closing room does not have any expandable closing rooms
-		if !expandable_closing_rooms_by_depth[depth].has(neighbor):
-			return #is a closing room but is not expandable
-		#run this for every neighbor expandable closing room
-		update_neighbor_closing_room(neighbor)
+		if expandable_closing_rooms.has(neighbor):
+			update_neighbor_closing_room(neighbor)
+
+#UPDATE NEIGHBOR CLOSING ROOM
+#subtracts 1 from the value of the current expandable closing room
+#this is done because the expandable closing room has just found itself a new neighbor which occupies one of its expandable directions.
+#checks if the expandable closing room has less than 2 openings left after updating, and removes it from the list if true
+#this is a very cheap way to update the available open directions of every expandable closing room as we only update those
+#that are direct neighbors of recently to-be-added rooms
+func update_neighbor_closing_room(neighbor):
+	expandable_closing_rooms[neighbor] -= 1
+	if expandable_closing_rooms[neighbor] < 2:
+		set_closing_room_as_non_expandable(neighbor)
+
+#SET CLOSING ROOM AS NON EXPANDABLE
+#deletes the closing room from the expandable closing rooms dictionaries
+#deletes the entire depth entry in expandable closing rooms by depth if the depth batch has zero contents
+func set_closing_room_as_non_expandable(room):
+	expandable_closing_rooms.erase(room)
+	expandable_closing_rooms_by_depth[cell_depth[room]].erase(room)
+	if expandable_closing_rooms_by_depth[cell_depth[room]].is_empty():
+		expandable_closing_rooms_by_depth.erase(cell_depth[room])
