@@ -256,7 +256,7 @@ func get_possible_rooms(input_set: Array, number_to_append: int) -> Array:
 		output_set.append(sum)
 	return output_set
 
-#MARK CELLS TO FILL LATER
+#MARK CELLS TO FILL NEXT
 #occupies tiles it will branch towards on the next iteration with placeholder texture
 #so that other cells dont open towards it and cause conflict
 func mark_cells_to_fill_next(cell: Vector2i):
@@ -278,9 +278,9 @@ func mark_cells_to_fill_next(cell: Vector2i):
 func manipulate_map(cell: Vector2i, room_selection: Array):
 	var parent_direction: int = cell_parent_direction[cell]
 	#disable spawning closing rooms if there are few spawnable rooms on the next iteration
-	if tiles_expected_next_iteration < 2:
-		delete_room_from_pool(parent_direction, room_selection)
-	if tiles_expected_next_iteration > 2:
+#	if tiles_expected_next_iteration < 2:
+#		delete_room_from_pool(parent_direction, room_selection)
+	if tiles_expected_next_iteration > 4:
 		force_spawn_closing_room(parent_direction, room_selection)
 #	if cell.x > 3:
 #		force_spawn_closing_room(parent_direction)
@@ -357,45 +357,29 @@ func get_room_to_open() -> Vector2i:
 	
 	#on very ultra rare cases (that are still technically possible), there wont be any expandable closing rooms
 	#so we return early and print an error after
-	if expandable_closing_rooms_by_depth.size() == 0:
+	if expandable_closing_rooms_by_depth.is_empty():
 		return Vector2i.ZERO
 	
+	var available_depths = expandable_closing_rooms_by_depth.keys()
+	available_depths.sort()
+	var min_d = 0
+	var max_d = available_depths.size() - 1
+	var room_selection = []
 	match expand_mode:
 		expand_modes.MAX:
-			var from_max_depth: int = max_cell_depth
-			while room_to_open == Vector2i.ZERO:
-				room_to_open = find_room_to_open(from_max_depth)
-				from_max_depth -= 1
-		expand_modes.MIN: 
-			var from_min_depth: int = expandable_closing_rooms_by_depth.keys()[0]
-			while room_to_open == Vector2i.ZERO:
-				room_to_open = find_room_to_open(from_min_depth)
-				from_min_depth += 1
+			var from_max_depth: int = available_depths[max_d]
+			room_selection = expandable_closing_rooms_by_depth[from_max_depth]
+		expand_modes.MIN:
+			var from_min_depth: int = available_depths[min_d]
+			room_selection = expandable_closing_rooms_by_depth[from_min_depth]
 		expand_modes.RANDOM:
-			var selection = expandable_closing_rooms_by_depth.keys()
-			var select_random_depth = select_random_element(selection)
-			var selected_depth = expandable_closing_rooms_by_depth[select_random_depth]
-			var select_random_closing_room = select_random_element(selected_depth)
-			room_to_open = select_random_closing_room
+			var from_random_depth : int = available_depths[rng.randi_range(min_d, max_d)]
+			room_selection = expandable_closing_rooms_by_depth[from_random_depth]
 		expand_modes.CUSTOM:
-			var from_custom_depth: int = max_cell_depth * 0.7
-			var counter = 1
-			while room_to_open == Vector2i.ZERO:
-				room_to_open = find_room_to_open(from_custom_depth)
-				from_custom_depth += counter
-				from_custom_depth = clamp(from_custom_depth, 1, max_cell_depth)
-				counter += 1 if counter > 0 else -1
-				counter = -counter
+			var from_custom_depth: int = available_depths[max_d * 0.6]
+			room_selection = expandable_closing_rooms_by_depth[from_custom_depth]
+	room_to_open = select_random_element(room_selection)
 	return room_to_open
-
-#FIND ROOM TO OPEN
-#input: depth
-#output: random cell that matches depth, or Vector2i.ZERO if none is found
-func find_room_to_open(depth_to_match: int) -> Vector2i:
-	if !expandable_closing_rooms_by_depth.has(depth_to_match):
-		return Vector2i.ZERO
-	var room_selection = expandable_closing_rooms_by_depth[depth_to_match]
-	return select_random_element(room_selection)
 	
 
 #SELECT RANDOM ELEMENT
