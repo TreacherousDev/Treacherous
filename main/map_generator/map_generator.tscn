@@ -12,8 +12,8 @@ format = 2
 script = ExtResource("2_uhxcg")
 max_tiles = 10000
 draw_path = NodePath("DrawPath")
-batch_size = 7
-expand_mode = 3
+batch_size = 6
+expand_mode = 2
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(0.05, 0.05)

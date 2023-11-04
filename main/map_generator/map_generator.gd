@@ -1,6 +1,9 @@
 extends TileMap
 
+## test here2
 @export var max_tiles : int = 100
+const STARTING_ROOM_POSITION = Vector2i.ZERO
+const STARTING_ROOM_ID = 15
 var rng = RandomNumberGenerator.new()
 var cell_parent_position = {}
 var cell_parent_direction = {}
@@ -16,18 +19,18 @@ var tile_count = 0
 
 func _ready():
 	randomize()
-	rng.set_seed(2844237709)
+	rng.set_seed(randi())
 	start()
 
 #START METHOD
 #initialzes the algorithm from the origin
 func start():
-	const starting_room_position = Vector2i.ZERO
-	var starting_room_id = 15
-	set_cell(0, starting_room_position, 0, Vector2i(starting_room_id, 0))
-	cell_depth[starting_room_position] = 0
-	mark_cells_to_fill_next(starting_room_position)
-	active_cells.append(starting_room_position)
+	var start_from = STARTING_ROOM_POSITION
+	var start_id = STARTING_ROOM_ID
+	set_cell(0, start_from, 0, Vector2i(start_id, 0))
+	cell_depth[start_from] = 0
+	mark_cells_to_fill_next(start_from)
+	active_cells.append(start_from)
 	run_algorithm()
 
 
@@ -45,7 +48,6 @@ func _input(event):
 	if event is InputEventMouseButton:
 		if event.is_pressed():
 			var location = local_to_map(get_local_mouse_position())
-			print("Tile Location: ", location)
 			draw_path.navigate_to_origin(location, cell_parent_position, tile_set.tile_size)
 
 
@@ -55,11 +57,11 @@ func _input(event):
 #############
 
 var iterations = 0
+## This is the internal clock. It distributes the algorithm through multiple frames.
+## Without this, very large maps would cause stack overflow.
+## The number inputted is how many times we run the algorithm on a single frame. Higher means faster but more memory usage.
 @export var batch_size : int = 1
 func run_algorithm():
-	#this is the internal clock. it distributes the algorithm through multiple frames
-	#without this, very large maps would cause stack overflow
-	#the batch size is how many times we run the algorithm on a single frame. higher means faster but more memory usage
 	iterations += 1
 	if iterations % batch_size == 0:
 		await get_tree().process_frame
@@ -88,6 +90,8 @@ func run_algorithm():
 		run_algorithm()
 	elif tile_count < max_tiles:
 		expand_map()
+	else:
+		print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
 
 	
 #SHUFFLE ARRAY
@@ -259,7 +263,7 @@ func mark_cells_to_fill_next(cell: Vector2i):
 	for cell_to_fill_next in cells_to_fill_next:
 		set_cell(0, cell_to_fill_next, 0, Vector2i.ZERO)
 		tiles_expected_next_iteration += 1
-		update_neighbor_closing_room(cell_to_fill_next)
+		check_if_neighbor_is_expandable_closing_room(cell_to_fill_next)
 
 
 
@@ -272,9 +276,9 @@ func mark_cells_to_fill_next(cell: Vector2i):
 #all methods to manipulate map structure goes here
 func manipulate_map(cell: Vector2i, parent_direction: int, room_selection: Array):
 	#disable spawning closing rooms if there are few spawnable rooms on the next iteration
-#	if tiles_expected_next_iteration < 3:
+#	if tiles_expected_next_iteration < 6:
 #		delete_room_from_pool(parent_direction, room_selection)
-	if tiles_expected_next_iteration > 10:
+	if tiles_expected_next_iteration > pow(tile_count, 1/3) * 20:
 		force_spawn_closing_room(parent_direction, room_selection)
 #	if cell.x > 3:
 #		force_spawn_closing_room(parent_direction)
@@ -320,7 +324,9 @@ enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
 var max_cell_depth : int = 0
 var closing_rooms = []
 var expandable_closing_rooms_by_depth = {}
+var expand_count : int = 0
 func expand_map():
+	expand_count += 1
 	var room_to_open := get_room_to_open()
 	if room_to_open == Vector2i.ZERO:
 		print("The chance of this happening is infinitely small, but look, you did it!")
@@ -418,21 +424,24 @@ func add_to_expandable_closing_rooms(room):
 #also checks if the expandable closing room has less than 2 openings left after updating, and removes it from the list if true
 #this is a very cheap way to update the available open directions of every expandable closing room as we only update those
 #that are direct neighbors of recently to-be-added rooms
-func update_neighbor_closing_room(room):
+func update_neighbor_closing_room(neighbor):
+	var depth = cell_depth[neighbor]
+	expandable_closing_rooms_by_depth[depth].erase(neighbor)
+	if expandable_closing_rooms_by_depth[depth].size() == 0:
+		expandable_closing_rooms_by_depth.erase(depth)
+
+func check_if_neighbor_is_expandable_closing_room(room):
 	var directions = [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
 	for direction in directions:
-		var neighbor_cell = room + direction
-		if !closing_rooms.has(neighbor_cell):
-			return
-		var depth = cell_depth[neighbor_cell]
+		var neighbor = room + direction
+		if !closing_rooms.has(neighbor):
+			return #not a closing room
+		var depth = cell_depth[neighbor]
 		if !expandable_closing_rooms_by_depth.has(depth):
-			return
-		if !expandable_closing_rooms_by_depth[depth].has(neighbor_cell):
-			return
-		var opening_count = get_wall_openings(neighbor_cell).size()
-		if opening_count >= 2:
-			return
-		expandable_closing_rooms_by_depth[depth].erase(neighbor_cell)
-		if expandable_closing_rooms_by_depth[depth].size() == 0:
-			expandable_closing_rooms_by_depth.erase(depth)
-
+			return #depth batch of closing room does not have any expandable closing rooms
+		if !expandable_closing_rooms_by_depth[depth].has(neighbor):
+			return #is a closing room but is not expandable
+		var opening_count = get_wall_openings(neighbor).size()
+		if opening_count > 2:
+			return #
+		update_neighbor_closing_room(neighbor)

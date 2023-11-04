@@ -1,6 +1,4 @@
 res://main/map_generator/map_generator.tscn
-res://main/icon.tscn
+res://main/map_generator/map_generator.tres
 res://main/map_generator/map_generator.gd
-res://main/map_generator/draw_path.gd
-res://test.gd
-res://main/map_generator/node_2d.tscn
+res://main/icon.tscn
