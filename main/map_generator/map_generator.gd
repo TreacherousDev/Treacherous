@@ -1,8 +1,5 @@
 extends TileMap
 
-## for slowmo map generation
-var delay: float = 0.15
-
 ## The number of rooms expected. This value will occasionally be off by 1 or 2 becausse a room can spawns 1 to 3 rooms.
 @export var map_size : int = 100
 
@@ -95,7 +92,6 @@ func run_algorithm():
 		cells_to_fill = shuffle_array_with_seed(cells_to_fill)
 		
 		for cell_to_fill in cells_to_fill:
-			await get_tree().create_timer(delay).timeout
 			next_active_cells.append(cell_to_fill)
 			var room_selection = get_room_selection(cell_to_fill)
 			manipulate_map(cell_to_fill, room_selection)
@@ -111,7 +107,6 @@ func run_algorithm():
 	if rooms_expected_next_iteration != 0:
 		run_algorithm()
 	elif current_map_size < map_size:
-		await get_tree().create_timer(delay).timeout
 		expand_map()
 	else:
 		print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
@@ -369,7 +364,6 @@ func expand_map():
 	var room_selection = get_room_selection(room_to_open)
 	delete_room_from_pool(parent_direction, room_selection)
 	spawn_room(room_to_open, room_selection)
-	await get_tree().create_timer(delay).timeout
 	run_algorithm()
 
 #GET ROOM TO OPEN
