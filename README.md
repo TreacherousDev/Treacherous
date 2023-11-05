@@ -16,11 +16,14 @@ This powerful algorithm creates intricate and diverse maps using cellular automa
 
 4. Reproducibility and Seed Support:
     Utilizes RandomNumberGenerator to ensure reproducibility via seeding.
-    Create consistent maps for replicable gameplay experiences.
+    Create consistent maps for replicable gameplay / debugging
 
 5. Customizability:
     Clear and well-commented codebase for easy understanding and modification.
     Customize room spawning rules, map expansion behavior, and room selection strategies.
+   
+6: Pathfinding:
+    Click on any room in the map to draw a path to the origin
 
 ### Use Cases:
 1. Roguelike Levels
