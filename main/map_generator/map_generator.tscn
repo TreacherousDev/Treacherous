@@ -10,9 +10,9 @@ tile_set = ExtResource("1_j13j0")
 cell_quadrant_size = 80
 format = 2
 script = ExtResource("2_uhxcg")
-map_size = 200
+map_size = 150
 draw_path = NodePath("DrawPath")
-batch_size = 5
+batch_size = 20
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(0.5, 0.5)

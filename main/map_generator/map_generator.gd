@@ -428,19 +428,6 @@ func add_to_closing_rooms_and_check_expandability(room: Vector2i):
 		else:
 			expandable_closing_rooms_by_depth[depth] = [room]
 
-#ADD TO EXPANDABLE CLOSING ROOMS
-#adds it to epxnandable closing rooms and expandable closing rooms by depth 
-#if it has at least 2 open directions
-#for depth, creates a new entry if none is avaliable, otherwise append entry to existing array
-func add_to_expandable_closing_rooms(room):
-	var open_directions = get_wall_openings(room).size()
-	if open_directions >= 2:
-		var depth = cell_depth[room]
-		if expandable_closing_rooms_by_depth.has(cell_depth[room]):
-			expandable_closing_rooms_by_depth[depth].append(room)
-		else:
-			expandable_closing_rooms_by_depth[depth] = [room]
-
 #CHECK IF NEIGHBOR IS EXPANDABLE CLOSING ROOM
 #called for every cell in "mark_cells_to_fill_next()"
 #checks all 4 von neumann neighbors of the cell if it is an expandable closing room, 
