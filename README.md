@@ -29,7 +29,7 @@ This powerful algorithm creates intricate and diverse maps using cellular automa
 1. Roguelike Levels
     Seamlessly integrate this algorithm into your roguelike game project to serve as its map generator, ensuring a unique yet consistent experience with each run.
 
-https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/7b3e8096-fcb4-4d25-a767-4d199845c6fa
+https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/8c0011b7-291a-4d2b-849e-e305e007b105
 
 
 
