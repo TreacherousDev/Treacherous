@@ -11,8 +11,6 @@ cell_quadrant_size = 80
 format = 2
 script = ExtResource("2_uhxcg")
 draw_path = NodePath("DrawPath")
-batch_size = 10
-expand_mode = 3
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(0.35, 0.35)

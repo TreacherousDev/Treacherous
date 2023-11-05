@@ -33,7 +33,6 @@ func _ready():
 	rng.set_seed(3)
 	start()
 
-
 func _process(_delta):
 	if Input.is_action_just_pressed("ui_accept"):
 		get_tree().reload_current_scene()
@@ -54,7 +53,6 @@ func _input(event):
 			var location = local_to_map(get_local_mouse_position())
 			draw_path.navigate_to_origin(location, cell_parent_position, tile_set.tile_size)
 
-
 ################
 # START METHOD #
 ################
@@ -67,7 +65,6 @@ func start():
 	mark_cells_to_fill_next(start_from)
 	active_cells.append(start_from)
 #	run_algorithm()
-
 
 ## Tracker for how many times the run_algorithm() function executes
 var iterations: int = 0
@@ -111,7 +108,6 @@ func run_algorithm():
 	else:
 		print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
 
-	
 #SHUFFLE ARRAY
 #input: array
 #output: the same array with randomized order using Fisher-Yates shuffle algorithm
@@ -269,7 +265,6 @@ func mark_cells_to_fill_next(cell: Vector2i):
 
 
 
-
 #########################################
 # FUNCTIONS TO MANIPULATE MAP STRUCTURE #
 #########################################
@@ -329,7 +324,7 @@ enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
 ## min: picks a room from the lowest available depth  [br]
 ## random: picks a room from a random available depth [br]
 ## custom: picks a room from a custom available depth [br]
-@export var expand_mode := expand_modes.MAX
+@export var expand_mode := expand_modes.MIN
 
 ## list of rooms with only 1 opening direction
 var closing_rooms := []
@@ -399,7 +394,6 @@ func get_room_to_open() -> Vector2i:
 	
 	room_to_open = select_random_element(room_selection)
 	return room_to_open
-	
 
 #SELECT RANDOM ELEMENT
 #input: array
@@ -409,6 +403,8 @@ func select_random_element(array: Array):
 	var select_random : int = rng.randi_range(0, max)
 	var selected_element = array[select_random]
 	return selected_element
+
+
 
 
 #####################################
