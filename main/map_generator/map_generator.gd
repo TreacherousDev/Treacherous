@@ -1,5 +1,9 @@
 extends TileMap
 
+##################################################################################
+# https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps #
+##################################################################################
+
 ## The number of rooms expected. This value will occasionally be off by 1 or 2 becausse a room can spawns 1 to 3 rooms.
 @export var map_size : int = 100
 
