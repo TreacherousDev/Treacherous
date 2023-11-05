@@ -281,7 +281,7 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 	####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 10:
+	if rooms_expected_next_iteration > sqrt(current_map_size)/2:
 		force_spawn_closing_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
 	if rooms_expected_next_iteration > 4:
