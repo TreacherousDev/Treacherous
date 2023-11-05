@@ -30,16 +30,14 @@ var current_map_size: int = 0
 
 func _ready():
 	randomize()
-	rng.set_seed(3)
+	rng.set_seed(randi())
 	start()
 
+# Enter: Reload Map
+# Esc: Quit Game
 func _process(_delta):
 	if Input.is_action_just_pressed("ui_accept"):
 		get_tree().reload_current_scene()
-	if Input.is_action_just_pressed("ui_up"):
-		run_algorithm()
-		print(map_size)
-		print(rng.seed)
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
 
@@ -64,7 +62,7 @@ func start():
 	cell_depth[start_from] = 0
 	mark_cells_to_fill_next(start_from)
 	active_cells.append(start_from)
-#	run_algorithm()
+	run_algorithm()
 
 ## Tracker for how many times the run_algorithm() function executes
 var iterations: int = 0
@@ -277,15 +275,19 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 	if current_map_size + rooms_expected_next_iteration >= map_size:
 		force_spawn_closing_room(parent_direction, room_selection)
 	
-	####################
-	# EDITABLE PORTION #
-	####################
+	####################################################################
+	# EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
+	# USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
+	####################################################################
 	
-	if rooms_expected_next_iteration > 1:
+	# sample 1: prevents the map from branching more than 10 branching paths per iteration
+	if rooms_expected_next_iteration > 10:
 		force_spawn_closing_room(parent_direction, room_selection)
-#		if tiles_expected_next_iteration < 2:
-#		delete_room_from_pool(parent_direction, room_selection#
-	
+	# sample 2: prevents the map from having less than 4 branching paths per iteration
+	if rooms_expected_next_iteration > 4:
+		delete_room_from_pool(parent_direction, room_selection)
+################################################################################################
+
 #ADD ROOM TO POOL
 #input: room added to pool and how many times to add
 #checks if the room already exists in the selection by default and only then increases its odds
@@ -319,12 +321,12 @@ func force_spawn_closing_room(direction: int, room_selection: Array):
 ########################################
 
 enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
-## How map expansion is handled [br]
-## max: picks a room from the highest available depth [br]
-## min: picks a room from the lowest available depth  [br]
-## random: picks a room from a random available depth [br]
-## custom: picks a room from a custom available depth [br]
-@export var expand_mode := expand_modes.MIN
+## How map expansion is handled when active cells run out [br]
+## Max: picks a room from the highest  depth [br]
+## Min: picks a room from the lowest  depth  [br]
+## Random: picks a room from a random  depth [br]
+## Custom: picks a room from a custom  depth [br]
+@export var expand_mode := expand_modes.RANDOM
 
 ## list of rooms with only 1 opening direction
 var closing_rooms := []
@@ -399,8 +401,8 @@ func get_room_to_open() -> Vector2i:
 #input: array
 #output: random element inside the array
 func select_random_element(array: Array):
-	var max: int = array.size() - 1
-	var select_random : int = rng.randi_range(0, max)
+	var max_num: int = array.size() - 1
+	var select_random : int = rng.randi_range(0, max_num)
 	var selected_element = array[select_random]
 	return selected_element
 

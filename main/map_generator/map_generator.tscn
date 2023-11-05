@@ -1,20 +1,22 @@
-[gd_scene load_steps=5 format=3 uid="uid://de2tm30oes8kq"]
+[gd_scene load_steps=5 format=3 uid="uid://dyux2g53g0eoo"]
 
-[ext_resource type="TileSet" uid="uid://16ab7u2fffpn" path="res://main/map_generator/map_generator.tres" id="1_w8utq"]
+[ext_resource type="TileSet" uid="uid://6qw2njg2vsa6" path="res://main/resources/map_generator.tres" id="1_j13j0"]
 [ext_resource type="Script" path="res://main/map_generator/map_generator.gd" id="2_uhxcg"]
 [ext_resource type="Script" path="res://main/map_generator/draw_path.gd" id="3_lgdg0"]
-[ext_resource type="PackedScene" uid="uid://dr2rslue3b8c0" path="res://main/icon.tscn" id="4_6b1q2"]
+[ext_resource type="PackedScene" uid="uid://crfmts8vvxs4a" path="res://main/map_generator/path_marker.tscn" id="4_h5yif"]
 
 [node name="Tilemap" type="TileMap" node_paths=PackedStringArray("draw_path")]
-tile_set = ExtResource("1_w8utq")
+tile_set = ExtResource("1_j13j0")
 cell_quadrant_size = 80
 format = 2
 script = ExtResource("2_uhxcg")
+map_size = 200
 draw_path = NodePath("DrawPath")
+batch_size = 5
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.35, 0.35)
+zoom = Vector2(0.5, 0.5)
 
 [node name="DrawPath" type="Node2D" parent="."]
 script = ExtResource("3_lgdg0")
-icon = ExtResource("4_6b1q2")
+icon = ExtResource("4_h5yif")
