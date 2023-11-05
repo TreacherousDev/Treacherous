@@ -22,7 +22,7 @@ This powerful algorithm creates intricate and diverse maps using cellular automa
     Clear and well-commented codebase for easy understanding and modification.
     Customize room spawning rules, map expansion behavior, and room selection strategies.
    
-6: Pathfinding:
+6. Pathfinding:
     Click on any room in the map to draw a path to the origin
 
 ### Use Cases:
