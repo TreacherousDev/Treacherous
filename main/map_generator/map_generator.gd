@@ -1,5 +1,6 @@
 extends TileMap
 
+class_name TDMapGenerator
 ##################################################################################
 # https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps #
 ##################################################################################
@@ -44,7 +45,8 @@ func _process(_delta):
 		get_tree().reload_current_scene()
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
-
+	if Input.is_action_just_pressed("ui_up"):
+		find_outer_walls_from_filled_cells()
 ## Path marker sprite
 @export var draw_path: Node2D
 #Draws a path from mouse click to origin 
@@ -285,10 +287,10 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 	####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > sqrt(current_map_size)/2:
+	if rooms_expected_next_iteration > pow(current_map_size, 1/3) * 30:
 		force_spawn_closing_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
-	if rooms_expected_next_iteration > 4:
+	if rooms_expected_next_iteration < 2:
 		delete_room_from_pool(parent_direction, room_selection)
 ################################################################################################
 
@@ -325,11 +327,11 @@ func force_spawn_closing_room(direction: int, room_selection: Array):
 ########################################
 
 enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
-## How map expansion is handled when active cells run out [br]
-## Max: picks a room from the highest  depth [br]
-## Min: picks a room from the lowest  depth  [br]
-## Random: picks a room from a random  depth [br]
-## Custom: picks a room from a custom  depth [br]
+## How map expansion is handled when map generation halts prematurely [br]
+## Max: expand from highest depth [br]
+## Min: expand from lowest depth  [br]
+## Random: expand from a random depth  [br]
+## Custom: expand from a custom depth [br]
 @export var expand_mode := expand_modes.RANDOM
 
 ## list of rooms with only 1 opening direction
@@ -424,7 +426,7 @@ func select_random_element(array: Array):
 func add_to_closing_rooms_and_check_expandability(room: Vector2i):
 	closing_rooms.append(room)
 	var opening_directions = get_wall_openings(room).size()
-	if opening_directions >= 2:
+	if opening_directions >= 1:
 		expandable_closing_rooms[room] = opening_directions
 		var depth = cell_depth[room]
 		if expandable_closing_rooms_by_depth.has(depth):
@@ -451,7 +453,7 @@ func check_if_neighbor_is_expandable_closing_room(room):
 #that are direct neighbors of recently to-be-added rooms
 func update_neighbor_closing_room(neighbor):
 	expandable_closing_rooms[neighbor] -= 1
-	if expandable_closing_rooms[neighbor] < 2:
+	if expandable_closing_rooms[neighbor] < 1:
 		set_closing_room_as_non_expandable(neighbor)
 
 #SET CLOSING ROOM AS NON EXPANDABLE
@@ -462,3 +464,57 @@ func set_closing_room_as_non_expandable(room):
 	expandable_closing_rooms_by_depth[cell_depth[room]].erase(room)
 	if expandable_closing_rooms_by_depth[cell_depth[room]].is_empty():
 		expandable_closing_rooms_by_depth.erase(cell_depth[room])
+
+
+var outer_cells = []
+var moore_directions := [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)]
+var vn_directions := [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]
+func find_outer_walls_from_filled_cells():
+	var filled_cells = get_used_cells(0)
+	for filled_cell in filled_cells:
+		if is_cell_an_outer_cell(filled_cell):
+			add_cell_and_its_moore_neighbors_to_outer_cells(filled_cell)
+	something()
+
+func add_cell_and_its_moore_neighbors_to_outer_cells(cell):
+	outer_cells.append(cell)
+	for direction in vn_directions:
+		var vn_neighbor = cell + direction
+		if !outer_cells.has(vn_neighbor):
+			outer_cells.append(vn_neighbor)
+
+func is_cell_an_outer_cell(cell: Vector2i) -> bool:
+	for direction in moore_directions:
+		var vn_neighbor = cell + direction
+		if get_cell_atlas_coords(0, vn_neighbor) == Vector2i(-1, -1):
+			return true
+	return false
+
+var marker = load("res://main/map_generator/path_marker.tscn")
+func something():
+	var fill_next = []
+	var remove_next = []
+	for cell in outer_cells:
+#		var new_icon = marker.instantiate()
+#		add_child(new_icon)
+#		new_icon.global_position = (cell * 80) + Vector2i(40, 40)
+#		set_cell(0, cell, 0, Vector2i(1, 0))
+		var neighbor_count = get_moore_neighbor_count_of_cell(cell)
+		if neighbor_count >= 4:
+			fill_next.append(cell)
+		else:
+			remove_next.append(cell)
+	
+	for cell in fill_next:
+		set_cell(0, cell, 0, Vector2i(1, 0))
+	
+	for cell in remove_next:
+		erase_cell(0, cell)
+
+func get_moore_neighbor_count_of_cell(cell) -> int:
+	var neighbor_count: int = 0
+	for direction in moore_directions:
+		var moore_neighbor = cell + direction
+		if get_cell_atlas_coords(0, moore_neighbor) != Vector2i(-1, -1):
+			neighbor_count += 1
+	return neighbor_count

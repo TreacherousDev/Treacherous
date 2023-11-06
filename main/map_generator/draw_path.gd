@@ -1,4 +1,5 @@
 extends Node2D
+class_name TDDrawPath
 
 @export var icon: PackedScene
 func navigate_to_origin(location: Vector2i, cell_parent_position: Dictionary, tile_size: Vector2i):
