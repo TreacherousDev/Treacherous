@@ -5,7 +5,7 @@ class_name TDMapGenerator
 # https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps #
 ##################################################################################
 
-## The number of rooms expected. This value will occasionally be off by 1 or 2 becausse a room can spawns 1 to 3 rooms.
+## The number of rooms expected.
 @export var map_size : int = 100
 
 ## RNG reference used in all randomizing methods so maps can be replicated via seeding
@@ -46,7 +46,8 @@ func _process(_delta):
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
 	if Input.is_action_just_pressed("ui_up"):
-		find_outer_walls_from_filled_cells()
+		print(current_map_size)
+#		find_outer_walls_from_filled_cells()
 ## Path marker sprite
 @export var draw_path: Node2D
 #Draws a path from mouse click to origin 
@@ -280,37 +281,43 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 	var parent_direction: int = cell_parent_direction[cell]
 	if current_map_size + rooms_expected_next_iteration >= map_size:
 		force_spawn_closing_room(parent_direction, room_selection)
+	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
+		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
+	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
+		delete_rooms_from_pool([15], room_selection)
 	
-	####################################################################
-	# EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
-	# USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
-	####################################################################
+####################################################################
+# EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
+# USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
+####################################################################
 	
-	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > pow(current_map_size, 1/3) * 30:
-		force_spawn_closing_room(parent_direction, room_selection)
-	# sample 2: prevents the map from having less than 4 branching paths per iteration
-	if rooms_expected_next_iteration < 2:
-		delete_room_from_pool(parent_direction, room_selection)
+#	# sample 1: prevents the map from branching more than 10 branching paths per iteration
+#	if rooms_expected_next_iteration > 20:
+#		force_spawn_closing_room(parent_direction, room_selection)
+#	# sample 2: prevents the map from having less than 4 branching paths per iteration
+#	if rooms_expected_next_iteration < 2:
+#		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
 #ADD ROOM TO POOL
-#input: room added to pool and how many times to add
+#input: array of rooms added to pool and how many times to add
 #checks if the room already exists in the selection by default and only then increases its odds
 #this prevents rooms from spawning room types that mismatch
-func add_room_to_pool(room_id: int, frequency: int, room_selection: Array):
-	if (room_selection.has(room_id)):
-		while (frequency > 0):
-			room_selection.append(room_id)
-			frequency -= 1
+func add_rooms_to_pool(rooms: Array, frequency: int, room_selection: Array):
+	for room in rooms:
+		if (room_selection.has(room)):
+			while (frequency > 0):
+				room_selection.append(room)
+				frequency -= 1
 
 #DELETE ROOM FROM POOL
-#input: room deleted from pool
+#input: array of rooms deleted from pool
 #only deletes the said room if it isnt the only available room to spawn
 #this prevents null error when calling the method that spawns room because the array is empty
-func delete_room_from_pool(room_id: int, room_selection: Array):
-	if (room_selection.size() > 1):
-		room_selection.erase(room_id)
+func delete_rooms_from_pool(rooms: Array, room_selection: Array):
+	for room in rooms:
+		if (room_selection.size() > 1):
+			room_selection.erase(room)
 
 #FORCE SPAWN CLOSING ROOM
 #input: the direction of the room relative to its parent
@@ -365,7 +372,7 @@ func expand_map():
 	
 	var parent_direction = cell_parent_direction[room_to_open]
 	var room_selection = get_room_selection(room_to_open)
-	delete_room_from_pool(parent_direction, room_selection)
+	delete_rooms_from_pool([parent_direction], room_selection)
 	spawn_room(room_to_open, room_selection)
 	run_algorithm()
 
@@ -379,7 +386,7 @@ func get_room_to_open() -> Vector2i:
 	if available_depths.is_empty():
 		return Vector2i.ZERO
 	
-	available_depths.sort()
+#	available_depths.sort()
 	
 	var min_d: int = 0
 	var max_d: int = available_depths.size() - 1
@@ -426,7 +433,7 @@ func select_random_element(array: Array):
 func add_to_closing_rooms_and_check_expandability(room: Vector2i):
 	closing_rooms.append(room)
 	var opening_directions = get_wall_openings(room).size()
-	if opening_directions >= 1:
+	if opening_directions >= 2:
 		expandable_closing_rooms[room] = opening_directions
 		var depth = cell_depth[room]
 		if expandable_closing_rooms_by_depth.has(depth):
@@ -453,7 +460,7 @@ func check_if_neighbor_is_expandable_closing_room(room):
 #that are direct neighbors of recently to-be-added rooms
 func update_neighbor_closing_room(neighbor):
 	expandable_closing_rooms[neighbor] -= 1
-	if expandable_closing_rooms[neighbor] < 1:
+	if expandable_closing_rooms[neighbor] < 2:
 		set_closing_room_as_non_expandable(neighbor)
 
 #SET CLOSING ROOM AS NON EXPANDABLE
@@ -472,44 +479,26 @@ var vn_directions := [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i
 func find_outer_walls_from_filled_cells():
 	var filled_cells = get_used_cells(0)
 	for filled_cell in filled_cells:
-		if is_cell_an_outer_cell(filled_cell):
-			add_cell_and_its_moore_neighbors_to_outer_cells(filled_cell)
+		for direction in vn_directions:
+			var vn_neighbor = filled_cell + direction
+			if get_cell_atlas_coords(0, vn_neighbor) == Vector2i(-1, -1):
+				if !outer_cells.has(vn_neighbor):
+					outer_cells.append(vn_neighbor)
 	something()
-
-func add_cell_and_its_moore_neighbors_to_outer_cells(cell):
-	outer_cells.append(cell)
-	for direction in vn_directions:
-		var vn_neighbor = cell + direction
-		if !outer_cells.has(vn_neighbor):
-			outer_cells.append(vn_neighbor)
-
-func is_cell_an_outer_cell(cell: Vector2i) -> bool:
-	for direction in moore_directions:
-		var vn_neighbor = cell + direction
-		if get_cell_atlas_coords(0, vn_neighbor) == Vector2i(-1, -1):
-			return true
-	return false
 
 var marker = load("res://main/map_generator/path_marker.tscn")
 func something():
 	var fill_next = []
-	var remove_next = []
 	for cell in outer_cells:
-#		var new_icon = marker.instantiate()
-#		add_child(new_icon)
-#		new_icon.global_position = (cell * 80) + Vector2i(40, 40)
-#		set_cell(0, cell, 0, Vector2i(1, 0))
+#		var new_marker = marker.instantiate()
+#		add_child(new_marker)
+#		new_marker.global_position = cell * 80 + Vector2i(40, 40)
 		var neighbor_count = get_moore_neighbor_count_of_cell(cell)
-		if neighbor_count >= 4:
+		if neighbor_count > 5:
 			fill_next.append(cell)
-		else:
-			remove_next.append(cell)
-	
+			
 	for cell in fill_next:
 		set_cell(0, cell, 0, Vector2i(1, 0))
-	
-	for cell in remove_next:
-		erase_cell(0, cell)
 
 func get_moore_neighbor_count_of_cell(cell) -> int:
 	var neighbor_count: int = 0

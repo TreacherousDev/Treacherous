@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3 uid="uid://bg5ca3dyvlqus"]
+
+[ext_resource type="TileSet" uid="uid://b25comeavgv0j" path="res://main/map_generator/cave_tileset.tres" id="1_whbde"]
+[ext_resource type="Script" path="res://main/map_generator/map_generator.gd" id="2_wqpss"]
+[ext_resource type="Script" path="res://main/map_generator/draw_path.gd" id="3_75lg3"]
+[ext_resource type="PackedScene" uid="uid://crfmts8vvxs4a" path="res://main/map_generator/path_marker.tscn" id="4_pwmsd"]
+
+[node name="Node2D" type="Node2D"]
+
+[node name="TDMapGenerator" type="TileMap" parent="." node_paths=PackedStringArray("draw_path")]
+tile_set = ExtResource("1_whbde")
+format = 2
+script = ExtResource("2_wqpss")
+draw_path = NodePath("TDDrawPath")
+batch_size = 10
+
+[node name="TDDrawPath" type="Node2D" parent="TDMapGenerator"]
+script = ExtResource("3_75lg3")
+icon = ExtResource("4_pwmsd")
+
+[node name="Camera2D" type="Camera2D" parent="TDMapGenerator"]
+zoom = Vector2(0.2, 0.2)
