@@ -45,9 +45,9 @@ func _process(_delta):
 		get_tree().reload_current_scene()
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
-	if Input.is_action_just_pressed("ui_up"):
-		print(current_map_size)
-#		find_outer_walls_from_filled_cells()
+	if Input.is_action_just_pressed("ui_down"):
+		pass
+
 ## Path marker sprite
 @export var draw_path: Node2D
 #Draws a path from mouse click to origin 
@@ -76,7 +76,7 @@ var iterations: int = 0
 ## The internal clock. It is how many times we run the algorithm on a single frame. 
 ## Higher means faster but more memory usage.
 @export var batch_size: int = 1
-
+var mode : int = 1
 #############
 # MAIN LOOP #
 #############
@@ -102,16 +102,18 @@ func run_algorithm():
 			rooms_expected_next_iteration -= 1
 			current_map_size += 1
 			
-	active_cells.clear()
-	active_cells = next_active_cells
-	next_active_cells = []
+	active_cells = next_active_cells.duplicate()
+	next_active_cells.clear()
 
 	if rooms_expected_next_iteration != 0:
 		run_algorithm()
 	elif current_map_size < map_size:
 		expand_map()
 	else:
-		print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
+		end_production()
+
+func end_production():
+	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
 
 #SHUFFLE ARRAY
 #input: array
@@ -291,12 +293,12 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
 	
-#	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-#	if rooms_expected_next_iteration > 20:
-#		force_spawn_closing_room(parent_direction, room_selection)
-#	# sample 2: prevents the map from having less than 4 branching paths per iteration
-#	if rooms_expected_next_iteration < 2:
-#		delete_rooms_from_pool([parent_direction], room_selection)
+	# sample 1: prevents the map from branching more than 10 branching paths per iteration
+	if rooms_expected_next_iteration > 12:
+		force_spawn_closing_room(parent_direction, room_selection)
+	# sample 2: prevents the map from having less than 4 branching paths per iteration
+	if rooms_expected_next_iteration < 1:
+		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
 #ADD ROOM TO POOL
@@ -471,39 +473,3 @@ func set_closing_room_as_non_expandable(room):
 	expandable_closing_rooms_by_depth[cell_depth[room]].erase(room)
 	if expandable_closing_rooms_by_depth[cell_depth[room]].is_empty():
 		expandable_closing_rooms_by_depth.erase(cell_depth[room])
-
-
-var outer_cells = []
-var moore_directions := [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)]
-var vn_directions := [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]
-func find_outer_walls_from_filled_cells():
-	var filled_cells = get_used_cells(0)
-	for filled_cell in filled_cells:
-		for direction in vn_directions:
-			var vn_neighbor = filled_cell + direction
-			if get_cell_atlas_coords(0, vn_neighbor) == Vector2i(-1, -1):
-				if !outer_cells.has(vn_neighbor):
-					outer_cells.append(vn_neighbor)
-	something()
-
-var marker = load("res://main/map_generator/path_marker.tscn")
-func something():
-	var fill_next = []
-	for cell in outer_cells:
-#		var new_marker = marker.instantiate()
-#		add_child(new_marker)
-#		new_marker.global_position = cell * 80 + Vector2i(40, 40)
-		var neighbor_count = get_moore_neighbor_count_of_cell(cell)
-		if neighbor_count > 5:
-			fill_next.append(cell)
-			
-	for cell in fill_next:
-		set_cell(0, cell, 0, Vector2i(1, 0))
-
-func get_moore_neighbor_count_of_cell(cell) -> int:
-	var neighbor_count: int = 0
-	for direction in moore_directions:
-		var moore_neighbor = cell + direction
-		if get_cell_atlas_coords(0, moore_neighbor) != Vector2i(-1, -1):
-			neighbor_count += 1
-	return neighbor_count
