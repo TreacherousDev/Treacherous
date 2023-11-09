@@ -1,11 +1,5 @@
 extends TDMapGenerator
 
-
-# Called when the node enters the scene tree for the first time.
-#func _ready():
-#	pass # Replace with function body.
-
-
 # Enter: Reload Map
 # Esc: Quit Game
 func _process(_delta):
@@ -20,25 +14,38 @@ func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
 	fill_map_and_get_border()
 	
-var outer_cells = []
+var border_cells_to_fill = []
 var moore_directions := [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)]
 var vn_directions := [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]
 
 var marker = load("res://main/map_generator/path_marker.tscn")
-func something():
+func smoothen_border():
 	var fill_next = []
-	for cell in outer_cells:
+	for cell in border_cells_to_fill:
 		var neighbor_count = get_moore_neighbor_count_of_cell(cell)
 		if neighbor_count >= 5:
 			fill_next.append(cell)
+	border_cells_to_fill = fill_next.duplicate()
 	
 	var chunk = 0	
 	for cell in fill_next:
-		if chunk % 400 == 0:
+		if chunk % 500 == 0:
 			await get_tree().process_frame
 		chunk += 1
 		set_cell(0, cell, 0, Vector2i(16, 0))
 		
+	if border_cells_to_fill.size() != 0:
+		get_next_border()
+	else: 
+		print("Cave Generation Completed")
+
+func get_next_border_cells_to_fill() -> Array:
+	var fill_next = []
+	for cell in border_cells_to_fill:
+		var neighbor_count = get_moore_neighbor_count_of_cell(cell)
+		if neighbor_count >= 5:
+			fill_next.append(cell)
+	return fill_next
 
 # GET MOORE NEIGHBOR COUNT OF CELL
 # searches each moore neighbor of the cell and counts how many non empty cells are there in total
@@ -57,27 +64,23 @@ func fill_map_and_get_border():
 	var chunk = 0
 	for cell in filled_cells:
 		chunk += 1
-		if chunk % 400 == 0:
+		if chunk % 200 == 0:
 			await get_tree().process_frame
 		set_cell(0, cell, 0, Vector2i(16, 0))
 		for direction in vn_directions:
 			var vn_neighbor = cell + direction
 			if get_cell_atlas_coords(0, vn_neighbor) == Vector2i(-1, -1):
-				if !outer_cells.has(vn_neighbor):
-					outer_cells.append(vn_neighbor)
-	
-var next_outer_cells = []
+				if !border_cells_to_fill.has(vn_neighbor):
+					border_cells_to_fill.append(vn_neighbor)
+	smoothen_border()
+
 func get_next_border():
-	something()
-	for cell in outer_cells:
-#		var foo = marker.instantiate()
-#		add_child(foo)
-#		foo.global_position = cell * 60 + Vector2i(40, 40)
+	smoothen_border()
+	for cell in border_cells_to_fill:
 		if get_cell_atlas_coords(0, cell) != Vector2i(-1, -1):
-			outer_cells.erase(cell)
-			for direction in vn_directions:
+			border_cells_to_fill.erase(cell)
+			for direction in moore_directions:
 				var neighbor = cell + direction
 				if get_cell_atlas_coords(0, neighbor) == Vector2i(-1, -1):
-					if !outer_cells.has(neighbor):
-						outer_cells.append(neighbor)
-	print(outer_cells.size())
+					if !border_cells_to_fill.has(neighbor):
+						border_cells_to_fill.append(neighbor)

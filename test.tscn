@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" uid="uid://crfmts8vvxs4a" path="res://main/map_generator/path_marker.tscn" id="4_pwmsd"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_bq8gq"]
-load_path = "res://.godot/imported/map_tiles_plain.png-1f6ffe3e786c6797c158ec53ba3938f1.ctex"
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_emgj2"]
 texture = SubResource("CompressedTexture2D_bq8gq")
