@@ -1,10 +1,11 @@
 extends TileMap
 
+class_name TDMapGenerator
 ##################################################################################
 # https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps #
 ##################################################################################
 
-## The number of rooms expected. This value will occasionally be off by 1 or 2 becausse a room can spawns 1 to 3 rooms.
+## The number of rooms expected.
 @export var map_size : int = 100
 
 ## RNG reference used in all randomizing methods so maps can be replicated via seeding
@@ -44,6 +45,8 @@ func _process(_delta):
 		get_tree().reload_current_scene()
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
+	if Input.is_action_just_pressed("ui_down"):
+		pass
 
 ## Path marker sprite
 @export var draw_path: Node2D
@@ -66,22 +69,32 @@ func start():
 	cell_depth[start_from] = 0
 	mark_cells_to_fill_next(start_from)
 	active_cells.append(start_from)
-	run_algorithm()
+	
+	while (active_cells.size() != 0):
+		iterations += 1
+		if iterations % batch_size == 0:
+			await get_tree().process_frame
+		run_algorithm()
+		if active_cells.size() == 0 and current_map_size < map_size:
+			expand_map()
+	
+	end_production()
+	
 
 ## Tracker for how many times the run_algorithm() function executes
 var iterations: int = 0
 ## The internal clock. It is how many times we run the algorithm on a single frame. 
 ## Higher means faster but more memory usage.
 @export var batch_size: int = 1
-
+var mode : int = 1
 #############
 # MAIN LOOP #
 #############
 ## Recursively calls itself till the map size is achieved
 func run_algorithm():
-	iterations += 1
-	if iterations % batch_size == 0:
-		await get_tree().process_frame
+#	iterations += 1
+#	if iterations % batch_size == 0:
+#		await get_tree().process_frame
 		
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 	active_cells = shuffle_array_with_seed(active_cells)
@@ -99,16 +112,18 @@ func run_algorithm():
 			rooms_expected_next_iteration -= 1
 			current_map_size += 1
 			
-	active_cells.clear()
-	active_cells = next_active_cells
-	next_active_cells = []
+	active_cells = next_active_cells.duplicate()
+	next_active_cells.clear()
 
-	if rooms_expected_next_iteration != 0:
-		run_algorithm()
-	elif current_map_size < map_size:
-		expand_map()
-	else:
-		print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
+#	if rooms_expected_next_iteration != 0:
+#		run_algorithm()
+#	elif current_map_size < map_size:
+#		expand_map()
+#	else:
+#		end_production()
+
+func end_production():
+	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
 
 #SHUFFLE ARRAY
 #input: array
@@ -278,37 +293,43 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 	var parent_direction: int = cell_parent_direction[cell]
 	if current_map_size + rooms_expected_next_iteration >= map_size:
 		force_spawn_closing_room(parent_direction, room_selection)
+	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
+		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
+	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
+		delete_rooms_from_pool([15], room_selection)
 	
-	####################################################################
-	# EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
-	# USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
-	####################################################################
+####################################################################
+# EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
+# USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
+####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > sqrt(current_map_size)/2:
+	if rooms_expected_next_iteration > 25:
 		force_spawn_closing_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
-	if rooms_expected_next_iteration > 4:
-		delete_room_from_pool(parent_direction, room_selection)
+	if rooms_expected_next_iteration < 1:
+		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
 #ADD ROOM TO POOL
-#input: room added to pool and how many times to add
+#input: array of rooms added to pool and how many times to add
 #checks if the room already exists in the selection by default and only then increases its odds
 #this prevents rooms from spawning room types that mismatch
-func add_room_to_pool(room_id: int, frequency: int, room_selection: Array):
-	if (room_selection.has(room_id)):
-		while (frequency > 0):
-			room_selection.append(room_id)
-			frequency -= 1
+func add_rooms_to_pool(rooms: Array, frequency: int, room_selection: Array):
+	for room in rooms:
+		if (room_selection.has(room)):
+			while (frequency > 0):
+				room_selection.append(room)
+				frequency -= 1
 
 #DELETE ROOM FROM POOL
-#input: room deleted from pool
+#input: array of rooms deleted from pool
 #only deletes the said room if it isnt the only available room to spawn
 #this prevents null error when calling the method that spawns room because the array is empty
-func delete_room_from_pool(room_id: int, room_selection: Array):
-	if (room_selection.size() > 1):
-		room_selection.erase(room_id)
+func delete_rooms_from_pool(rooms: Array, room_selection: Array):
+	for room in rooms:
+		if (room_selection.size() > 1):
+			room_selection.erase(room)
 
 #FORCE SPAWN CLOSING ROOM
 #input: the direction of the room relative to its parent
@@ -325,11 +346,11 @@ func force_spawn_closing_room(direction: int, room_selection: Array):
 ########################################
 
 enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
-## How map expansion is handled when active cells run out [br]
-## Max: picks a room from the highest  depth [br]
-## Min: picks a room from the lowest  depth  [br]
-## Random: picks a room from a random  depth [br]
-## Custom: picks a room from a custom  depth [br]
+## How map expansion is handled when map generation halts prematurely [br]
+## Max: expand from highest depth [br]
+## Min: expand from lowest depth  [br]
+## Random: expand from a random depth  [br]
+## Custom: expand from a custom depth [br]
 @export var expand_mode := expand_modes.RANDOM
 
 ## list of rooms with only 1 opening direction
@@ -363,9 +384,8 @@ func expand_map():
 	
 	var parent_direction = cell_parent_direction[room_to_open]
 	var room_selection = get_room_selection(room_to_open)
-	delete_room_from_pool(parent_direction, room_selection)
+	delete_rooms_from_pool([parent_direction], room_selection)
 	spawn_room(room_to_open, room_selection)
-	run_algorithm()
 
 #GET ROOM TO OPEN
 #Selects 1 room from the list of expandable closing rooms depending on the value of expand_mode
@@ -377,7 +397,7 @@ func get_room_to_open() -> Vector2i:
 	if available_depths.is_empty():
 		return Vector2i.ZERO
 	
-	available_depths.sort()
+#	available_depths.sort()
 	
 	var min_d: int = 0
 	var max_d: int = available_depths.size() - 1

@@ -1,0 +1,47 @@
+[gd_scene load_steps=7 format=3 uid="uid://bg5ca3dyvlqus"]
+
+[ext_resource type="Script" path="res://main/map_generator/map_generator.gd" id="2_wqpss"]
+[ext_resource type="Script" path="res://main/map_generator/draw_path.gd" id="3_75lg3"]
+[ext_resource type="PackedScene" uid="uid://crfmts8vvxs4a" path="res://main/map_generator/path_marker.tscn" id="4_pwmsd"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_bq8gq"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_emgj2"]
+texture = SubResource("CompressedTexture2D_bq8gq")
+texture_region_size = Vector2i(80, 80)
+0:0/0 = 0
+15:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+4:0/0 = 0
+3:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+10:0/0 = 0
+11:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+14:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_pk06e"]
+tile_size = Vector2i(80, 80)
+sources/0 = SubResource("TileSetAtlasSource_emgj2")
+
+[node name="Node2D" type="Node2D"]
+
+[node name="TDMapGenerator" type="TileMap" parent="." node_paths=PackedStringArray("draw_path")]
+tile_set = SubResource("TileSet_pk06e")
+format = 2
+script = ExtResource("2_wqpss")
+draw_path = NodePath("TDDrawPath")
+batch_size = 10
+
+[node name="TDDrawPath" type="Node2D" parent="TDMapGenerator"]
+script = ExtResource("3_75lg3")
+icon = ExtResource("4_pwmsd")
+
+[node name="Camera2D" type="Camera2D" parent="TDMapGenerator"]
+zoom = Vector2(0.2, 0.2)

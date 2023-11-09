@@ -1,18 +1,43 @@
-[gd_scene load_steps=5 format=3 uid="uid://dyux2g53g0eoo"]
+[gd_scene load_steps=7 format=3 uid="uid://dyux2g53g0eoo"]
 
-[ext_resource type="TileSet" uid="uid://6qw2njg2vsa6" path="res://main/resources/map_generator.tres" id="1_j13j0"]
-[ext_resource type="Script" path="res://main/map_generator/map_generator.gd" id="2_uhxcg"]
+[ext_resource type="Texture2D" uid="uid://b8i8cvdu2m4r4" path="res://main/resources/cave_tilemaps-spritesheet-export.png" id="1_fdrsq"]
+[ext_resource type="Script" path="res://cave_generator.gd" id="2_ludot"]
 [ext_resource type="Script" path="res://main/map_generator/draw_path.gd" id="3_lgdg0"]
 [ext_resource type="PackedScene" uid="uid://crfmts8vvxs4a" path="res://main/map_generator/path_marker.tscn" id="4_h5yif"]
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ga2ae"]
+texture = ExtResource("1_fdrsq")
+texture_region_size = Vector2i(20, 20)
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+10:0/0 = 0
+11:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+14:0/0 = 0
+15:0/0 = 0
+16:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_u057a"]
+tile_size = Vector2i(20, 20)
+sources/0 = SubResource("TileSetAtlasSource_ga2ae")
+
 [node name="Tilemap" type="TileMap" node_paths=PackedStringArray("draw_path")]
-tile_set = ExtResource("1_j13j0")
-cell_quadrant_size = 80
+tile_set = SubResource("TileSet_u057a")
 format = 2
-script = ExtResource("2_uhxcg")
-map_size = 10000
+script = ExtResource("2_ludot")
+map_size = 200000
 draw_path = NodePath("DrawPath")
-batch_size = 10
+batch_size = 200
+expand_mode = 3
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(0.05, 0.05)
