@@ -69,7 +69,17 @@ func start():
 	cell_depth[start_from] = 0
 	mark_cells_to_fill_next(start_from)
 	active_cells.append(start_from)
-	run_algorithm()
+	
+	while (active_cells.size() != 0):
+		iterations += 1
+		if iterations % batch_size == 0:
+			await get_tree().process_frame
+		run_algorithm()
+		if active_cells.size() == 0 and current_map_size < map_size:
+			expand_map()
+	
+	end_production()
+	
 
 ## Tracker for how many times the run_algorithm() function executes
 var iterations: int = 0
@@ -82,9 +92,9 @@ var mode : int = 1
 #############
 ## Recursively calls itself till the map size is achieved
 func run_algorithm():
-	iterations += 1
-	if iterations % batch_size == 0:
-		await get_tree().process_frame
+#	iterations += 1
+#	if iterations % batch_size == 0:
+#		await get_tree().process_frame
 		
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 	active_cells = shuffle_array_with_seed(active_cells)
@@ -105,12 +115,12 @@ func run_algorithm():
 	active_cells = next_active_cells.duplicate()
 	next_active_cells.clear()
 
-	if rooms_expected_next_iteration != 0:
-		run_algorithm()
-	elif current_map_size < map_size:
-		expand_map()
-	else:
-		end_production()
+#	if rooms_expected_next_iteration != 0:
+#		run_algorithm()
+#	elif current_map_size < map_size:
+#		expand_map()
+#	else:
+#		end_production()
 
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
@@ -294,10 +304,10 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 30:
+	if rooms_expected_next_iteration > 25:
 		force_spawn_closing_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
-	if rooms_expected_next_iteration < 2:
+	if rooms_expected_next_iteration < 1:
 		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
@@ -376,7 +386,6 @@ func expand_map():
 	var room_selection = get_room_selection(room_to_open)
 	delete_rooms_from_pool([parent_direction], room_selection)
 	spawn_room(room_to_open, room_selection)
-	run_algorithm()
 
 #GET ROOM TO OPEN
 #Selects 1 room from the list of expandable closing rooms depending on the value of expand_mode
