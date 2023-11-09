@@ -34,12 +34,12 @@ sources/0 = SubResource("TileSetAtlasSource_ga2ae")
 tile_set = SubResource("TileSet_u057a")
 format = 2
 script = ExtResource("2_ludot")
-map_size = 8000
+map_size = 100000
 draw_path = NodePath("DrawPath")
-batch_size = 10
+batch_size = 100
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.2, 0.2)
+zoom = Vector2(0.06, 0.06)
 
 [node name="DrawPath" type="Node2D" parent="."]
 script = ExtResource("3_lgdg0")

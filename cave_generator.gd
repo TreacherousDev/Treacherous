@@ -7,8 +7,8 @@ func _process(_delta):
 		get_tree().reload_current_scene()
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
-	if Input.is_action_just_pressed("ui_down"):
-		get_next_border()
+#	if Input.is_action_just_pressed("ui_down"):
+#		get_next_border()
 
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
@@ -27,15 +27,17 @@ func smoothen_border():
 			fill_next.append(cell)
 	border_cells_to_fill = fill_next.duplicate()
 	
-	var chunk = 0	
+	var chunk = 0
+	print(fill_next.size())
 	for cell in fill_next:
-		if chunk % 500 == 0:
-			await get_tree().process_frame
-		chunk += 1
+#		if chunk % 2000 == 0:
+#			await get_tree().process_frame
+#		chunk += 1
 		set_cell(0, cell, 0, Vector2i(16, 0))
 		
 	if border_cells_to_fill.size() != 0:
-		get_next_border()
+		border_cells_to_fill = get_next_border(fill_next)
+		smoothen_border()
 	else: 
 		print("Cave Generation Completed")
 
@@ -64,7 +66,7 @@ func fill_map_and_get_border():
 	var chunk = 0
 	for cell in filled_cells:
 		chunk += 1
-		if chunk % 200 == 0:
+		if chunk % 2000 == 0:
 			await get_tree().process_frame
 		set_cell(0, cell, 0, Vector2i(16, 0))
 		for direction in vn_directions:
@@ -74,13 +76,12 @@ func fill_map_and_get_border():
 					border_cells_to_fill.append(vn_neighbor)
 	smoothen_border()
 
-func get_next_border():
-	smoothen_border()
-	for cell in border_cells_to_fill:
-		if get_cell_atlas_coords(0, cell) != Vector2i(-1, -1):
-			border_cells_to_fill.erase(cell)
-			for direction in moore_directions:
-				var neighbor = cell + direction
-				if get_cell_atlas_coords(0, neighbor) == Vector2i(-1, -1):
-					if !border_cells_to_fill.has(neighbor):
-						border_cells_to_fill.append(neighbor)
+func get_next_border(recently_filled_cells):
+	var result = []
+	for cell in recently_filled_cells:
+		for direction in moore_directions:
+			var neighbor = cell + direction
+			if get_cell_atlas_coords(0, neighbor) == Vector2i(-1, -1):
+				if !result.has(neighbor):
+					result.append(neighbor)
+	return result
