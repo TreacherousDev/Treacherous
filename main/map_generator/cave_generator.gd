@@ -1,14 +1,5 @@
 extends TDMapGenerator
 
-# Enter: Reload Map
-# Esc: Quit Game
-func _process(_delta):
-	if Input.is_action_just_pressed("ui_accept"):
-		get_tree().reload_current_scene()
-	if Input.is_key_pressed(KEY_ESCAPE):
-		get_tree().quit()
-#	if Input.is_action_just_pressed("ui_down"):
-#		get_next_border()
 
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
@@ -20,12 +11,38 @@ var border_cells_to_fill = []
 var moore_directions := [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)]
 var vn_directions := [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]
 
+
+#MANIPULATE MAP
+#all methods to manipulate map structure goes here
+func manipulate_map(cell: Vector2i, room_selection: Array):
+	# DEFAULT: Closes the map if the map size is already achieved
+	var parent_direction: int = cell_parent_direction[cell]
+	if current_map_size + rooms_expected_next_iteration >= map_size:
+		force_spawn_closing_room(parent_direction, room_selection)
+	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
+		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
+	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
+		delete_rooms_from_pool([15], room_selection)
+	
+####################################################################
+# EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
+# USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
+####################################################################
+	
+	# sample 1: prevents the map from branching more than 10 branching paths per iteration
+	if rooms_expected_next_iteration > 18:
+		force_spawn_closing_room(parent_direction, room_selection)
+	# sample 2: prevents the map from having less than 4 branching paths per iteration
+	if rooms_expected_next_iteration < 2:
+		delete_rooms_from_pool([parent_direction], room_selection)
+################################################################################################
+
 var chunk = 0
 var marker = load("res://main/map_generator/path_marker.tscn")
 
 #SMOOTHEN BORDER
-#get all border cells that have more than 5 occupied neighbors and append them to an array
-#fill all of the cells in the array and get the next border cells to fill based on the previous one
+#list down all the border cells with more than 5 occupied neighbors
+#fill all of them after listing, then get the next list based on the surrounding cells of the current list
 func smoothen_border():
 	var fill_next = []
 	for cell in border_cells_to_fill:
@@ -34,12 +51,11 @@ func smoothen_border():
 			fill_next.append(cell)
 	
 	for cell in fill_next:
-		if chunk % 1000 == 0:
+		if chunk % 10000 == 0:
 			await get_tree().process_frame
 		chunk += 1
 		set_cell(0, cell, 0, Vector2i(16, 0))
 		
-	border_cells_to_fill = get_next_border_cells_to_fill(fill_next)
 	if border_cells_to_fill.size() != 0:
 		border_cells_to_fill = get_next_border_cells_to_fill(fill_next)
 		smoothen_border()
@@ -62,7 +78,7 @@ func fill_map_and_get_border():
 	var filled_cells = get_used_cells(0)
 	for cell in filled_cells:
 		chunk += 1
-		if chunk % 10000 == 0:
+		if chunk % 100000 == 0:
 			await get_tree().process_frame
 		set_cell(0, cell, 0, Vector2i(16, 0))
 		for direction in vn_directions:
