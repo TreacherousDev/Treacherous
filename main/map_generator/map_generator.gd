@@ -86,15 +86,14 @@ var iterations: int = 0
 ## The internal clock. It is how many times we run the algorithm on a single frame. 
 ## Higher means faster but more memory usage.
 @export var batch_size: int = 1
-var mode : int = 1
 #############
 # MAIN LOOP #
 #############
-## Recursively calls itself till the map size is achieved
+## Gets called again and again untill map generation is completed
 func run_algorithm():
-#	iterations += 1
-#	if iterations % batch_size == 0:
-#		await get_tree().process_frame
+	iterations += 1
+	if iterations % batch_size == 0:
+		await get_tree().process_frame
 		
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 	active_cells = shuffle_array_with_seed(active_cells)
@@ -108,19 +107,11 @@ func run_algorithm():
 			var room_selection = get_room_selection(cell_to_fill)
 			manipulate_map(cell_to_fill, room_selection)
 			spawn_room(cell_to_fill, room_selection)
-			
 			rooms_expected_next_iteration -= 1
 			current_map_size += 1
 			
 	active_cells = next_active_cells.duplicate()
 	next_active_cells.clear()
-
-#	if rooms_expected_next_iteration != 0:
-#		run_algorithm()
-#	elif current_map_size < map_size:
-#		expand_map()
-#	else:
-#		end_production()
 
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
@@ -178,8 +169,10 @@ func get_wall_openings(cell: Vector2i) -> Array:
 #input: position of cell
 #output: list of cells to fill according to the cell's open branches, excluding the branch to parent
 func get_cells_to_fill(cell: Vector2i) -> Array:
+	var room_id_to_directions = {1: [1], 2: [2], 3: [1, 2], 4: [4], 5: [1, 4], 6: [2, 4], 7: [1, 2, 4], 
+	8: [8], 9: [1, 8], 10: [2, 8], 11: [1, 2, 8], 12: [4, 8], 13: [1, 4, 8], 14: [2, 4, 8], 15: [1, 2, 4, 8]}
 	var room_id: int = get_cell_atlas_coords(0, cell).x
-	var open_directions : Array = get_branch_directions_of_room(room_id)
+	var open_directions : Array = room_id_to_directions[room_id]
 	var cells_to_fill : Array = convert_directions_to_cells_coords(open_directions, cell)
 	#exclude parent direction from producible directions if it has a parent
 	#this prevents infinite looping back and forth
@@ -197,22 +190,6 @@ func get_room_selection(cell_to_fill: Vector2i) -> Array:
 	var parent_direction = cell_parent_direction[cell_to_fill]
 	var room_selection = get_possible_rooms(possible_branch_directions, parent_direction)
 	return room_selection
-
-#GET BRANCH DIRECTIONS OF ROOM
-#input: room id (1-15, sum of bit values of directions)
-#output: component bit values of id
-#ex: 14 -> [2, 4, 8]
-func get_branch_directions_of_room(number: int) -> Array:
-	var direction_numbers := [8, 4, 2, 1]
-	var result := []
-	for i in direction_numbers.size():
-		var direction_number = direction_numbers[i]
-		if number >= direction_number:
-			result.append(direction_number)
-			number -= direction_number
-			if number == 0: 
-				break
-	return result
 
 #CONVERT DIRECTIONS TO CELLS COORDS
 #input: parent cell position and directions to branch
