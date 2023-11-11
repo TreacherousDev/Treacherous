@@ -1,17 +1,19 @@
-[gd_scene load_steps=4 format=3 uid="uid://c1vd466ox1ip5"]
+[gd_scene load_steps=5 format=3 uid="uid://c1vd466ox1ip5"]
 
 [ext_resource type="TileSet" uid="uid://7vhpumv5yog1" path="res://main/resources/map_generator_rooms.tres" id="1_jgpx7"]
 [ext_resource type="Script" path="res://main/map_generator/rooms_generator.gd" id="2_ns4qq"]
+[ext_resource type="PackedScene" uid="uid://ck1pvs1inq53q" path="res://node_2d.tscn" id="3_8mued"]
 [ext_resource type="PackedScene" uid="uid://crfmts8vvxs4a" path="res://main/map_generator/path_marker.tscn" id="3_na7s7"]
 
 [node name="Tilemap" type="TileMap"]
 tile_set = ExtResource("1_jgpx7")
 format = 2
 script = ExtResource("2_ns4qq")
-icon = ExtResource("3_na7s7")
-map_size = 50
+icon1 = ExtResource("3_na7s7")
+icon2 = ExtResource("3_8mued")
+map_size = 1000
 batch_size = 1000
 expand_mode = 0
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.6, 0.6)
+zoom = Vector2(0.3, 0.3)

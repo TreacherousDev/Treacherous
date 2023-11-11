@@ -2,6 +2,6 @@
 
 [ext_resource type="Texture2D" uid="uid://dhu2qqms0ltfj" path="res://main/resources/Red_Square.svg.png" id="1_xtmch"]
 
-[node name="Icon" type="Sprite2D"]
-scale = Vector2(0.02, 0.02)
+[node name="Icon" type="Sprite2D" groups=["path_marker"]]
+scale = Vector2(0.015, 0.015)
 texture = ExtResource("1_xtmch")

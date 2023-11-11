@@ -1,23 +1,23 @@
 extends TDMapGenerator
 
+#func navigate_to_origin(location: Vector2i, cell_parent_position: Dictionary, tile_size: Vector2i):
+#	var current_location = location
+#	if !cell_parent_position.has(location):
+#		return
+#	spawn_marker(current_location, tile_size)
+#	while cell_parent_position.has(current_location):
+##		await get_tree().process_frame
+#		current_location = cell_parent_position[current_location]
+#		spawn_marker(current_location, tile_size)
 
 ## Path marker sprite
 @export var draw_path: Node2D
 #Draws a path from mouse click to origin 
 #See draw_path.gd
 
-func navigate_to_origin(location: Vector2i, cell_parent_position: Dictionary, tile_size: Vector2i):
-	var current_location = location
-	if !cell_parent_position.has(location):
-		return
-	spawn_marker(current_location, tile_size)
-	while cell_parent_position.has(current_location):
-#		await get_tree().process_frame
-		current_location = cell_parent_position[current_location]
-		spawn_marker(current_location, tile_size)
-
-@export var icon: PackedScene
-func spawn_marker(current_location, tile_size):
+@export var icon1: PackedScene
+@export var icon2: PackedScene
+func spawn_marker(icon, current_location, tile_size):
 	var size_x = tile_size.x
 	var size_y = tile_size.y
 	var loc_x = current_location.x * size_x
@@ -36,6 +36,7 @@ func _input(event):
 			if click_count == 0:
 				var click_1 = local_to_map(get_local_mouse_position())
 				if cell_parent_position.has(click_1):
+					clear_previous_markers()
 					print("click 1")
 					mouseclick_1 = click_1
 					click_count += 1
@@ -46,39 +47,60 @@ func _input(event):
 					mouseclick_2 = click_2
 					click_count = 0
 					foo()
-					
-				
+
+var loc1
+var loc2
+
+func clear_previous_markers():
+	for marker in get_tree().get_nodes_in_group("path_marker"):
+		marker.queue_free()
+
 func foo():
+	loc1 = mouseclick_1
+	loc2 = mouseclick_2
 	var click_1_depth = cell_depth[mouseclick_1]
 	var click_2_depth = cell_depth[mouseclick_2]
 	var difference = click_1_depth - click_2_depth
-	
+	print(difference)
+
 	if difference > 0:
 		var current_location = mouseclick_1
 		while difference > 0: 
-			click_1_step(current_location)
+			spawn_marker(icon1, current_location, tile_set.tile_size)
 			difference -= 1
 			current_location = cell_parent_position[current_location]
+		loc1 = current_location
 	elif difference < 0:
 		var current_location = mouseclick_2
 		while difference < 0: 
-			click_2_step(current_location)
+			spawn_marker(icon1, current_location, tile_set.tile_size)
 			difference += 1
 			current_location = cell_parent_position[current_location]
-			
-	
+		loc2 = current_location
 
-var cells_visited = []
-func click_1_step(current_location):
-	cells_visited.append(current_location)
-	spawn_marker(current_location, tile_set.tile_size)
-	
-func click_2_step(current_location):
-	cells_visited.append(current_location)
-	spawn_marker(current_location, tile_set.tile_size)
+	print(cell_depth[loc1])
+	print(cell_depth[loc2])
+	step1()
 
-func increment():
-	pass
+var buzz
+
+
+func step1():
+	spawn_marker(icon1, loc1, tile_set.tile_size)
+	if cell_parent_position.has(loc1):
+		buzz = loc1
+		loc1 = cell_parent_position[loc1]
+		step2()
+
+
+func step2():
+	if loc2 != buzz:
+		spawn_marker(icon1, loc2, tile_set.tile_size)
+		loc2 = cell_parent_position[loc2]
+		step1()
+	else:
+		buzz = null
+		
 
 #MANIPULATE MAP
 #all methods to manipulate map structure goes here
@@ -98,9 +120,9 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 10:
-		force_spawn_closing_room(parent_direction, room_selection)
+#	if rooms_expected_next_iteration > 20:
+#		force_spawn_closing_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
-#	if rooms_expected_next_iteration < 1:
-#		delete_rooms_from_pool([parent_direction], room_selection)
+	if rooms_expected_next_iteration < 10:
+		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
