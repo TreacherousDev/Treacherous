@@ -45,18 +45,6 @@ func _process(_delta):
 		get_tree().reload_current_scene()
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
-	if Input.is_action_just_pressed("ui_down"):
-		pass
-
-## Path marker sprite
-@export var draw_path: Node2D
-#Draws a path from mouse click to origin 
-#See draw_path.gd
-func _input(event):
-	if event is InputEventMouseButton:
-		if event.is_pressed():
-			var location = local_to_map(get_local_mouse_position())
-			draw_path.navigate_to_origin(location, cell_parent_position, tile_set.tile_size)
 
 ################
 # START METHOD #
