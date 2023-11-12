@@ -8,7 +8,7 @@ extends TDMapGenerator
 
 @export var icon1: PackedScene
 @export var icon2: PackedScene
-func spawn_marker(icon, current_location, tile_size):
+func spawn_marker(icon, current_location, tile_size, rot):
 	var size_x = tile_size.x
 	var size_y = tile_size.y
 	var loc_x = current_location.x * size_x
@@ -16,6 +16,7 @@ func spawn_marker(icon, current_location, tile_size):
 	var new_icon = icon.instantiate()
 	add_child(new_icon)
 	new_icon.global_position = Vector2i(loc_x, loc_y) + Vector2i(size_x / 2, size_y / 2)
+	new_icon.rotation_degrees = rot
 	
 
 var mouseclick_1
@@ -35,28 +36,42 @@ func _input(event):
 				if get_used_cells(0).has(click_2):
 					mouseclick_2 = click_2
 					click_count = 0
-					foo()
+					create_path()
 
 
 func clear_previous_markers():
 	for marker in get_tree().get_nodes_in_group("path_marker"):
 		marker.queue_free()
 
-var fubar = {1: 270, 2: 0, 4: 90, 8: 180}
-var fubar2 = {1: 90, 2: 180, 4: 270, 8: 0}
+var vector_to_rotation = {Vector2i.UP: 90, Vector2i.RIGHT: 180, Vector2i.DOWN: 270, Vector2i.LEFT: 0}
 var pointer_1
 var pointer_2
 var pointer_1_path = []
 var pointer_2_path = []
-func foo():
-	
+func create_path():
 	pointer_1 = mouseclick_1
 	pointer_2 = mouseclick_2
 	
 	if pointer_1 == pointer_2:
 		print("You are already here!")
 		return
-		
+	
+	match_pointer_depths()
+	connect_pointers_by_increment()
+	pointer_2_path.reverse()
+	var path = pointer_1_path + pointer_2_path
+	
+	animate_path(path)
+
+func connect_pointers_by_increment():
+	while pointer_1 != pointer_2:
+		pointer_1_path.append(pointer_1)
+		pointer_1 = cell_parent_position[pointer_1]
+		pointer_2_path.append(pointer_2)
+		pointer_2 = cell_parent_position[pointer_2]
+	pointer_1_path.append(pointer_1)
+
+func match_pointer_depths():
 	var difference = cell_depth[pointer_1] - cell_depth[pointer_2]
 	if difference > 0:
 		while difference > 0: 
@@ -68,32 +83,19 @@ func foo():
 			pointer_2_path.append(pointer_2)
 			pointer_2 = cell_parent_position[pointer_2]
 			difference += 1
-	
-	step1()
-	pointer_2_path.reverse()
-	var path = pointer_1_path + pointer_2_path
-	
-	print(path)
+
+
+func animate_path(path: Array):
 	var i = 0
 	while i < path.size()-1:
-		spawn_marker(icon2, path[i], tile_set.tile_size)
+		await get_tree().create_timer(0.1).timeout
+		var path_rotation = vector_to_rotation[path[i] - path[i+1]]
+		spawn_marker(icon1, path[i], tile_set.tile_size, path_rotation)
 		i += 1
-
+		
 	pointer_1_path.clear()
 	pointer_2_path.clear()
 	path.clear()
-
-func step1():
-	pointer_1_path.append(pointer_1)
-	if pointer_1 != pointer_2:
-		pointer_1 = cell_parent_position[pointer_1]
-		step2()
-
-func step2():
-	pointer_2_path.append(pointer_2)
-	pointer_2 = cell_parent_position[pointer_2]
-	step1()
-
 #MANIPULATE MAP
 #all methods to manipulate map structure goes here
 func manipulate_map(cell: Vector2i, room_selection: Array):
