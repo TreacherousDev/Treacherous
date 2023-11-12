@@ -1,14 +1,5 @@
 extends TDMapGenerator
 
-#func navigate_to_origin(location: Vector2i, cell_parent_position: Dictionary, tile_size: Vector2i):
-#	var current_location = location
-#	if !cell_parent_position.has(location):
-#		return
-#	spawn_marker(current_location, tile_size)
-#	while cell_parent_position.has(current_location):
-##		await get_tree().process_frame
-#		current_location = cell_parent_position[current_location]
-#		spawn_marker(current_location, tile_size)
 
 ## Path marker sprite
 @export var draw_path: Node2D
@@ -35,72 +26,73 @@ func _input(event):
 		if event.pressed:
 			if click_count == 0:
 				var click_1 = local_to_map(get_local_mouse_position())
-				if cell_parent_position.has(click_1):
+				if get_used_cells(0).has(click_1):
 					clear_previous_markers()
-					print("click 1")
 					mouseclick_1 = click_1
 					click_count += 1
 			elif click_count == 1:
 				var click_2 = local_to_map(get_local_mouse_position())
-				if cell_parent_position.has(click_2):
-					print("click 2")
+				if get_used_cells(0).has(click_2):
 					mouseclick_2 = click_2
 					click_count = 0
 					foo()
 
-var loc1
-var loc2
 
 func clear_previous_markers():
 	for marker in get_tree().get_nodes_in_group("path_marker"):
 		marker.queue_free()
 
+var fubar = {1: 270, 2: 0, 4: 90, 8: 180}
+var fubar2 = {1: 90, 2: 180, 4: 270, 8: 0}
+var pointer_1
+var pointer_2
+var pointer_1_path = []
+var pointer_2_path = []
 func foo():
-	loc1 = mouseclick_1
-	loc2 = mouseclick_2
-	var click_1_depth = cell_depth[mouseclick_1]
-	var click_2_depth = cell_depth[mouseclick_2]
-	var difference = click_1_depth - click_2_depth
-	print(difference)
-
+	
+	pointer_1 = mouseclick_1
+	pointer_2 = mouseclick_2
+	
+	if pointer_1 == pointer_2:
+		print("You are already here!")
+		return
+		
+	var difference = cell_depth[pointer_1] - cell_depth[pointer_2]
 	if difference > 0:
-		var current_location = mouseclick_1
 		while difference > 0: 
-			spawn_marker(icon1, current_location, tile_set.tile_size)
+			pointer_1_path.append(pointer_1)
+			pointer_1 = cell_parent_position[pointer_1]
 			difference -= 1
-			current_location = cell_parent_position[current_location]
-		loc1 = current_location
 	elif difference < 0:
-		var current_location = mouseclick_2
 		while difference < 0: 
-			spawn_marker(icon1, current_location, tile_set.tile_size)
+			pointer_2_path.append(pointer_2)
+			pointer_2 = cell_parent_position[pointer_2]
 			difference += 1
-			current_location = cell_parent_position[current_location]
-		loc2 = current_location
-
-	print(cell_depth[loc1])
-	print(cell_depth[loc2])
+	
 	step1()
+	pointer_2_path.reverse()
+	var path = pointer_1_path + pointer_2_path
+	
+	print(path)
+	var i = 0
+	while i < path.size()-1:
+		spawn_marker(icon2, path[i], tile_set.tile_size)
+		i += 1
 
-var buzz
-
+	pointer_1_path.clear()
+	pointer_2_path.clear()
+	path.clear()
 
 func step1():
-	spawn_marker(icon1, loc1, tile_set.tile_size)
-	if cell_parent_position.has(loc1):
-		buzz = loc1
-		loc1 = cell_parent_position[loc1]
+	pointer_1_path.append(pointer_1)
+	if pointer_1 != pointer_2:
+		pointer_1 = cell_parent_position[pointer_1]
 		step2()
 
-
 func step2():
-	if loc2 != buzz:
-		spawn_marker(icon1, loc2, tile_set.tile_size)
-		loc2 = cell_parent_position[loc2]
-		step1()
-	else:
-		buzz = null
-		
+	pointer_2_path.append(pointer_2)
+	pointer_2 = cell_parent_position[pointer_2]
+	step1()
 
 #MANIPULATE MAP
 #all methods to manipulate map structure goes here

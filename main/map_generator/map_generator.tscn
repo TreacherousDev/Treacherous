@@ -11,9 +11,9 @@ format = 2
 script = ExtResource("2_ns4qq")
 icon1 = ExtResource("3_na7s7")
 icon2 = ExtResource("3_8mued")
-map_size = 1000
+map_size = 80
 batch_size = 1000
 expand_mode = 0
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.3, 0.3)
+zoom = Vector2(0.9, 0.9)
