@@ -79,9 +79,7 @@ var iterations: int = 0
 #############
 ## Gets called again and again untill map generation is completed
 func run_algorithm():
-	iterations += 1
-	if iterations % batch_size == 0:
-		await get_tree().process_frame
+
 		
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 	active_cells = shuffle_array_with_seed(active_cells)

@@ -88,7 +88,7 @@ func match_pointer_depths():
 func animate_path(path: Array):
 	var i = 0
 	while i < path.size()-1:
-		await get_tree().create_timer(0.1).timeout
+#		await get_tree().create_timer(0.05).timeout
 		var path_rotation = vector_to_rotation[path[i] - path[i+1]]
 		spawn_marker(icon1, path[i], tile_set.tile_size, path_rotation)
 		i += 1
@@ -96,6 +96,8 @@ func animate_path(path: Array):
 	pointer_1_path.clear()
 	pointer_2_path.clear()
 	path.clear()
+
+
 #MANIPULATE MAP
 #all methods to manipulate map structure goes here
 func manipulate_map(cell: Vector2i, room_selection: Array):
@@ -114,9 +116,9 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-#	if rooms_expected_next_iteration > 20:
-#		force_spawn_closing_room(parent_direction, room_selection)
+	if rooms_expected_next_iteration > 40:
+		force_spawn_closing_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
-	if rooms_expected_next_iteration < 10:
+	if rooms_expected_next_iteration < 2:
 		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
