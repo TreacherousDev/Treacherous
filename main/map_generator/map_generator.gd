@@ -79,8 +79,6 @@ var iterations: int = 0
 #############
 ## Gets called again and again untill map generation is completed
 func run_algorithm():
-
-		
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 	active_cells = shuffle_array_with_seed(active_cells)
 	
@@ -274,7 +272,7 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
-#ADD ROOM TO POOL
+#ADD ROOMS TO POOL
 #input: array of rooms added to pool and how many times to add
 #checks if the room already exists in the selection by default and only then increases its odds
 #this prevents rooms from spawning room types that mismatch
@@ -285,7 +283,7 @@ func add_rooms_to_pool(rooms: Array, frequency: int, room_selection: Array):
 				room_selection.append(room)
 				frequency -= 1
 
-#DELETE ROOM FROM POOL
+#DELETE ROOMS FROM POOL
 #input: array of rooms deleted from pool
 #only deletes the said room if it isnt the only available room to spawn
 #this prevents null error when calling the method that spawns room because the array is empty
