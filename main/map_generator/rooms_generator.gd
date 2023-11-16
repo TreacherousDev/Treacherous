@@ -7,7 +7,7 @@ extends TDMapGenerator
 #See draw_path.gd
 
 func draw_edge():
-	for edge_room in edge_rooms:
+	for edge_room in expandable_rooms:
 		spawn_marker(icon2, edge_room, tile_set.tile_size, 0)
 		
 @export var icon1: PackedScene
@@ -70,24 +70,24 @@ func create_path():
 func connect_pointers_by_increment():
 	while pointer_1 != pointer_2:
 		pointer_1_path.append(pointer_1)
-		pointer_1 = cell_data[pointer_1][Cell.PARENT_POSITION]
+		pointer_1 = cell_data[pointer_1][PARENT_POSITION]
 		pointer_2_path.append(pointer_2)
-		pointer_2 = cell_data[pointer_2][Cell.PARENT_POSITION]
+		pointer_2 = cell_data[pointer_2][PARENT_POSITION]
 	pointer_1_path.append(pointer_1)
 
 func match_pointer_depths():
-	var depth_1 = cell_data[pointer_1][Cell.DEPTH]
-	var depth_2 = cell_data[pointer_2][Cell.DEPTH]
+	var depth_1 = cell_data[pointer_1][DEPTH]
+	var depth_2 = cell_data[pointer_2][DEPTH]
 	var difference = depth_1 - depth_2
 	if difference > 0:
 		while difference > 0: 
 			pointer_1_path.append(pointer_1)
-			pointer_1 = cell_data[pointer_1][Cell.PARENT_POSITION]
+			pointer_1 = cell_data[pointer_1][PARENT_POSITION]
 			difference -= 1
 	elif difference < 0:
 		while difference < 0: 
 			pointer_2_path.append(pointer_2)
-			pointer_2 = cell_data[pointer_2][Cell.PARENT_POSITION]
+			pointer_2 = cell_data[pointer_2][PARENT_POSITION]
 			difference += 1
 
 
@@ -108,7 +108,7 @@ func animate_path(path: Array):
 #all methods to manipulate map structure goes here
 func manipulate_map(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
-	var parent_direction: int = cell_data[cell][Cell.PARENT_DIRECTION]
+	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
 	if current_map_size + rooms_expected_next_iteration >= map_size:
 		force_spawn_closing_room(parent_direction, room_selection)
 	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
@@ -122,7 +122,7 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 1:
+	if rooms_expected_next_iteration > 8:
 		force_spawn_closing_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
 #	if rooms_expected_next_iteration < 1:
