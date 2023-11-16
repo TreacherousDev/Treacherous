@@ -26,10 +26,10 @@ script = ExtResource("2_ns4qq")
 icon1 = ExtResource("3_na7s7")
 icon2 = SubResource("PackedScene_oyyxc")
 batch_size = 20
-expand_mode = 0
+expand_mode = 1
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.9, 0.9)
+zoom = Vector2(0.7, 0.7)
 
 [node name="draw_path" type="Node2D" parent="."]
 script = ExtResource("5_psan5")
