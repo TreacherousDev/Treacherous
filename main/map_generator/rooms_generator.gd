@@ -6,6 +6,10 @@ extends TDMapGenerator
 #Draws a path from mouse click to origin 
 #See draw_path.gd
 
+func draw_edge():
+	for edge_room in edge_rooms:
+		spawn_marker(icon2, edge_room, tile_set.tile_size, 0)
+		
 @export var icon1: PackedScene
 @export var icon2: PackedScene
 func spawn_marker(icon, current_location, tile_size, rot):
@@ -118,10 +122,10 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 4:
+	if rooms_expected_next_iteration > 1:
 		force_spawn_closing_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
-#	if rooms_expected_next_iteration < 2:
+#	if rooms_expected_next_iteration < 1:
 #		delete_rooms_from_pool([parent_direction], room_selection)
 #	add_rooms_to_pool([10], 100, room_selection)
 ################################################################################################

@@ -35,20 +35,22 @@ var cell_data = {}
 func _ready():
 	randomize()
 	rng.set_seed(randi())
+	print(rng.seed)
 	start()
 
 # Enter: Reload Map
 # Esc: Quit Game
 func _process(_delta):
+	print(rooms_expected_next_iteration)
 	if Input.is_action_just_pressed("ui_accept"):
 		get_tree().reload_current_scene()
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
 	if Input.is_action_just_pressed("ui_down"):
-		print("a \n", cell_data)
-		print("b \n", edge_rooms)
-		print("c \n", edge_rooms_by_depth)
+		draw_edge()
 
+func draw_edge():
+	pass
 ################
 # START METHOD #
 ################
@@ -69,7 +71,7 @@ func start():
 		run_algorithm()
 		if active_cells.size() == 0 and current_map_size < map_size:
 			pass
-#			expand_map()
+			expand_map()
 	
 	end_production()
 	
@@ -96,6 +98,7 @@ func run_algorithm():
 			var room_selection = get_room_selection(cell_to_fill)
 			manipulate_map(cell_to_fill, room_selection)
 			spawn_room(cell_to_fill, room_selection)
+			mark_cells_to_fill_next(cell_to_fill)
 			rooms_expected_next_iteration -= 1
 			current_map_size += 1
 			
@@ -130,7 +133,6 @@ func spawn_room(cell_to_fill: Vector2i, room_selection: Array):
 	var select_random : int = rng.randi_range(0, room_selection.size() - 1)
 	var selected_room : int = room_selection[select_random]
 	set_cell(0, cell_to_fill, 0, Vector2i(selected_room, 0))
-	mark_cells_to_fill_next(cell_to_fill)
 
 #GET WALL OPENINGS
 #input: position of cell
@@ -273,11 +275,11 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 25:
+	if rooms_expected_next_iteration > 1:
 		force_spawn_closing_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
-	if rooms_expected_next_iteration < 1:
-		delete_rooms_from_pool([parent_direction], room_selection)
+#	if rooms_expected_next_iteration < 1:
+#		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
 #ADD ROOMS TO POOL
@@ -334,31 +336,31 @@ var expand_count: int = 0
 #creates an open branch from one of the available expandable closing rooms
 func expand_map():
 	expand_count += 1
-	var room_to_expand := get_room_to_expand()
-	if room_to_expand == Vector2i.ZERO:
-		print("Unexpected Error: No edge rooms found")
-		return
-
-	active_cells.clear()
-	active_cells.append(room_to_expand)
-	
+	var room_to_expand = get_room_to_expand()
 	var room_id: int = get_cell_atlas_coords(0, room_to_expand).x
-	var base_directions: Array = room_id_to_directions[room_id]
 	var expandable_directions: Array = get_wall_openings(room_to_expand)
-	var expanded_room: int = get_possible_rooms([base_directions], select_random_element(expandable_directions))[0]
+	var selected_expand_direction: int = select_random_element(expandable_directions)
+	var expanded_room: int = room_id + selected_expand_direction
+	var expand_location = convert_directions_to_cells_coords([selected_expand_direction], room_to_expand)[0]
 	set_cell(0, room_to_expand, 0, Vector2i(expanded_room, 0))
-	rooms_expected_next_iteration += 1
+	set_cell(0, expand_location, 0, Vector2i(0, 0))
+	update_neighbor_rooms(expand_location)
 	
+	active_cells.clear()
+	active_cells.append(expand_location)
+	
+	store_cell_data([expand_location], room_to_expand)
+	var room_selection = get_room_selection(expand_location)
+	manipulate_map(expand_location, room_selection)
+	spawn_room(expand_location, room_selection)
+	mark_cells_to_fill_next(expand_location)
+	current_map_size += 1
 
 #GET ROOM TO OPEN
 #Selects 1 room from the list of expandable closing rooms depending on the value of expand_mode
 func get_room_to_expand() -> Vector2i:
 	var room_to_expand := Vector2i.ZERO
 	var available_depths = edge_rooms_by_depth.keys()
-	#on very ultra rare cases (that are still in theory possible), there wont be any expandable closing rooms
-	#so we return early and print an error after
-	if available_depths.is_empty():
-		return Vector2i.ZERO
 	
 	available_depths.sort()
 	
@@ -425,7 +427,7 @@ func update_neighbor_rooms(room):
 		var neighbor = room + direction
 		if cell_data.has(neighbor):
 			cell_data[neighbor][Cell.OPEN_DIRECTIONS] -= 1
-			if cell_data[neighbor][Cell.OPEN_DIRECTIONS] < 1:
+			if cell_data[neighbor][Cell.OPEN_DIRECTIONS] == 0:
 				delete_from_edge_rooms(neighbor)
 
 #SET CLOSING ROOM AS NON EXPANDABLE
