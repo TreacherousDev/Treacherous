@@ -3,39 +3,13 @@ extends TDMapGenerator
 
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
-	cell_parent_direction.clear()
-	cell_parent_position.clear()
-	fill_map_and_get_border()
+	get_border()
 	
 var border_cells_to_fill = []
 var moore_directions := [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)]
 var vn_directions := [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]
 
 
-#MANIPULATE MAP
-#all methods to manipulate map structure goes here
-func manipulate_map(cell: Vector2i, room_selection: Array):
-	# DEFAULT: Closes the map if the map size is already achieved
-	var parent_direction: int = cell_parent_direction[cell]
-	if current_map_size + rooms_expected_next_iteration >= map_size:
-		force_spawn_closing_room(parent_direction, room_selection)
-	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
-		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
-	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
-		delete_rooms_from_pool([15], room_selection)
-	
-####################################################################
-# EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
-# USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
-####################################################################
-	
-	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 18:
-		force_spawn_closing_room(parent_direction, room_selection)
-	# sample 2: prevents the map from having less than 4 branching paths per iteration
-	if rooms_expected_next_iteration < 2:
-		delete_rooms_from_pool([parent_direction], room_selection)
-################################################################################################
 
 var chunk = 0
 var marker = load("res://main/map_generator/path_marker.tscn")
@@ -54,7 +28,7 @@ func smoothen_border():
 		if chunk % 10000 == 0:
 			await get_tree().process_frame
 		chunk += 1
-		set_cell(0, cell, 0, Vector2i(16, 0))
+		set_cell(0, cell, 0, Vector2i(0, 0))
 		
 	if border_cells_to_fill.size() != 0:
 		border_cells_to_fill = get_next_border_cells_to_fill(fill_next)
@@ -74,13 +48,8 @@ func get_moore_neighbor_count_of_cell(cell) -> int:
 
 # FILL MAP AND GET BORDER
 # replaces all direcional room sprites with 1 plain textures and gets the bounding shape of the map
-func fill_map_and_get_border():
-	var filled_cells = get_used_cells(0)
-	for cell in filled_cells:
-		chunk += 1
-		if chunk % 100000 == 0:
-			await get_tree().process_frame
-		set_cell(0, cell, 0, Vector2i(16, 0))
+func get_border():
+	for cell in expandable_rooms:
 		for direction in vn_directions:
 			var vn_neighbor = cell + direction
 			if get_cell_atlas_coords(0, vn_neighbor) == Vector2i(-1, -1):

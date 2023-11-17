@@ -100,16 +100,15 @@ func start():
 		if active_cells.size() == 0 and current_map_size < map_size:
 			pass
 			expand_map()
-	print(expandable_rooms)
-	print(expandable_rooms_by_depth)
 	end_production()
-	
+
 
 ## Tracker for how many times the run_algorithm() function executes
 var iterations: int = 0
 ## The internal clock. It is how many times we run the algorithm on a single frame. 
 ## Higher means faster but more memory usage.
 @export var batch_size: int = 1
+
 #############
 # MAIN LOOP #
 #############
@@ -131,15 +130,6 @@ func run_algorithm():
 	active_cells = next_active_cells.duplicate()
 	next_active_cells.clear()
 
-# FILL CELL
-# Fills the current cell with an appropriate room from its room pool
-# Marks its branching directions with temporary dots to get rid of spawning collisions with nearby cells
-func fill_cell(cell):
-	var room_selection = get_room_selection(cell)
-	manipulate_room_selection(cell, room_selection)
-	spawn_room(cell, room_selection)
-	mark_cells_to_fill_next(cell)
-
 # END PRODUCTION
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
@@ -157,10 +147,18 @@ func shuffle_array_with_seed(array: Array):
 	return array
 
 
-
 ##################
 # CORE FUNCTIONS #
 ##################
+
+# FILL CELL
+# Fills the current cell with an appropriate room from its room pool
+# Marks its branching directions with temporary dots to get rid of spawning collisions with nearby cells
+func fill_cell(cell):
+	var room_selection = get_room_selection(cell)
+	manipulate_room_selection(cell, room_selection)
+	spawn_room(cell, room_selection)
+	mark_cells_to_fill_next(cell)
 
 # SPAWN ROOMS
 # Pick a random available room from the selection and set the cell to its value
@@ -266,9 +264,6 @@ func get_possible_rooms(input_set: Array, number_to_append: int) -> Array:
 		output_set.append(sum)
 	return output_set
 
-
-
-
 # MARK CELLS TO FILL NEXT
 # Occupies tiles it will branch towards on the next iteration with a placeholder dot
 # This makes it so that nearby cells detect this cell as occupied
@@ -354,7 +349,6 @@ enum expand_modes {MAX, MIN, RANDOM}
 ## Min: expand from lowest depth  [br]
 ## Random: expand from a random depth  [br]
 @export var expand_mode := expand_modes.RANDOM
-
 ## Tracker for how many times map expansion is requested
 var expand_count: int = 0
 
@@ -423,8 +417,6 @@ func select_random_element(array: Array):
 	return selected_element
 
 
-
-
 #####################################
 # FUNCTIONS TO MANAGE CLOSING ROOMS #
 #####################################
@@ -438,7 +430,6 @@ func add_to_expandable_rooms(room: Vector2i):
 		expandable_rooms_by_depth[depth].append(room)
 	else:
 		expandable_rooms_by_depth[depth] = [room]
-
 
 # UPDATE NEIGHBOR ROOMS
 # Called in mark_cells_to_fill_next, for every dot placed
