@@ -10,6 +10,8 @@ class_name TDMapGenerator
 
 ## RNG reference used in all randomizing methods so maps can be replicated via seeding
 var rng := RandomNumberGenerator.new()
+
+## Lookup table for converting room IDs into its component bit flag integers
 var room_id_to_directions = {
 	1: [1], 
 	2: [2], 
@@ -27,7 +29,7 @@ var room_id_to_directions = {
 	14: [2, 4, 8], 
 	15: [1, 2, 4, 8]
 	}
-## Arrays to manage cells that need to turn into rooms
+
 ## The current active cells that the algorithm iterates through
 var active_cells := []
 ## The next batch of active cells, that will be revalued to active cells after active cells is done iterating
@@ -37,15 +39,21 @@ var next_active_cells := []
 var rooms_expected_next_iteration: int = 0
 ## The current number of rooms 
 var current_map_size: int = 0
+## List of rooms with at least 1 unoccupied von neumann neighbors
 var expandable_rooms = []
+## Same list, but sorted by depth for fast retrieval (see expand_map())
 var expandable_rooms_by_depth = {}
 
-#Key: Tilemap coordinates of cell
-#Value: array with elements based on following consts
+## Key: tilemap coordinates of cell
+## Value: array with the following contsts as indexes
 var cell_data = {}
+## How many rooms to traverse before reaching the root node
 const DEPTH = 0
+## Direction of parent room, expressed in int as a bit flag (1: UP, 2: RIGHT, 4: DOWN, 8: LEFT)
 const PARENT_POSITION = 1
+## Position of parent room, expressed as a Vector2i
 const PARENT_DIRECTION = 2
+## Array containing unoccupied directions, expressed as bit flags
 const OPEN_DIRECTIONS = 3
 
 
@@ -67,6 +75,9 @@ func _process(_delta):
 
 func draw_edge():
 	pass
+
+
+
 ################
 # START METHOD #
 ################
@@ -102,7 +113,7 @@ var iterations: int = 0
 #############
 # MAIN LOOP #
 #############
-## Gets called again and again untill map generation is completed
+# Gets called again and again untill map generation is completed
 func run_algorithm():
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 	active_cells = shuffle_array_with_seed(active_cells)
@@ -120,19 +131,23 @@ func run_algorithm():
 	active_cells = next_active_cells.duplicate()
 	next_active_cells.clear()
 
+# FILL CELL
+# Fills the current cell with an appropriate room from its room pool
+# Marks its branching directions with temporary dots to get rid of spawning collisions with nearby cells
 func fill_cell(cell):
 	var room_selection = get_room_selection(cell)
-	manipulate_map(cell, room_selection)
+	manipulate_room_selection(cell, room_selection)
 	spawn_room(cell, room_selection)
 	mark_cells_to_fill_next(cell)
 
+# END PRODUCTION
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
 
-#SHUFFLE ARRAY
-#input: array
-#output: the same array with randomized order using Fisher-Yates shuffle algorithm
-#array.shuffle() is not used as it isnt attached to the seed and would make maps irreproducible
+# SHUFFLE ARRAY
+# Input: array
+# Output: the same array with randomized order using Fisher-Yates shuffle algorithm
+# Array.shuffle() is not used as it isnt attached to the seed and would make maps irreproducible
 func shuffle_array_with_seed(array: Array):
 	for i in range(array.size() - 1, 0, -1):
 		var j = rng.randi() % (i + 1)
@@ -147,19 +162,16 @@ func shuffle_array_with_seed(array: Array):
 # CORE FUNCTIONS #
 ##################
 
-#SPAWN ROOMS
-#pick a random available room from the selection
-#if selected room is a closing room, store it in a list, + more
+# SPAWN ROOMS
+# Pick a random available room from the selection and set the cell to its value
 func spawn_room(cell_to_fill: Vector2i, room_selection: Array):
 	var select_random : int = rng.randi_range(0, room_selection.size() - 1)
 	var selected_room : int = room_selection[select_random]
 	set_cell(0, cell_to_fill, 0, Vector2i(selected_room, 0))
 
-#GET WALL OPENINGS
-#input: position of cell
-#output: array containing all opening directions
-#checks if each direction relative to that cell is empty
-#adds that to wall openings if true
+# GET WALL OPENINGS
+# Input: position of cell
+# Output: array containing all unoccupied von neuman neighbors, expressed as int bit flags
 func get_wall_openings(cell: Vector2i) -> Array:
 	var wall_openings = []
 	if get_cell_atlas_coords(0, cell + Vector2i.UP) == Vector2i(-1, -1):
@@ -172,9 +184,9 @@ func get_wall_openings(cell: Vector2i) -> Array:
 		wall_openings.append(8)
 	return wall_openings
 
-#GET CELLS TO FILL
-#input: position of cell
-#output: list of cells to fill according to the cell's open branches, excluding the branch to parent
+# GET CELLS TO FILL
+# Input: position of cell
+# Output: list of cells to fill according to the cell's open branches, excluding the branch to parent
 func get_cells_to_fill(cell: Vector2i) -> Array:
 	var room_id: int = get_cell_atlas_coords(0, cell).x
 	var open_directions : Array = room_id_to_directions[room_id]
@@ -187,9 +199,9 @@ func get_cells_to_fill(cell: Vector2i) -> Array:
 	store_cell_data(cells_to_fill, cell)
 	return cells_to_fill
 
-#GET ROOM SELECTION
-#input: cell
-#output: producible rooms of cell based on open directions
+# GET ROOM SELECTION
+# Input: cell
+# Output: producible rooms of cell based on open directions
 func get_room_selection(cell_to_fill: Vector2i) -> Array:
 	var wall_openings: Array = get_wall_openings(cell_to_fill)
 	var possible_branch_directions: Array = get_powerset(wall_openings)
@@ -197,10 +209,10 @@ func get_room_selection(cell_to_fill: Vector2i) -> Array:
 	var room_selection: Array = get_possible_rooms(possible_branch_directions, parent_direction)
 	return room_selection
 
-#CONVERT DIRECTIONS TO CELLS COORDS
-#input: parent cell position and directions to branch
-#output: producible cell positions relative to parent
-#ex: (0, 0) is a left-right room type, output becomes [(1, 0) (-1, 0)]
+# CONVERT DIRECTIONS TO CELLS COORDS
+# Input: parent cell position and directions to branch
+# Output: producible cell positions relative to parent
+# Ex: (0, 0) is a left-right room type, output becomes [(1, 0) (-1, 0)]
 func convert_directions_to_cells_coords(directions: Array, parent_cell: Vector2i) -> Array:
 	var direction_to_coords = {1 : Vector2i.UP, 2 : Vector2i.RIGHT, 4 : Vector2i.DOWN, 8 : Vector2i.LEFT}
 	var cells_to_fill = []
@@ -209,10 +221,9 @@ func convert_directions_to_cells_coords(directions: Array, parent_cell: Vector2i
 		cells_to_fill.append(cell)
 	return cells_to_fill
 
-#STORE CELL DATA
-#stores parenthood data of cells on two separate dictionaries: one for relative position and one for absolute. 
-#ex: (1, 0) originates from (0, 0), with a direction of right
-#useful for knowing which direction a room closes, or for navigating the path to the origin, or more to come
+# STORE CELL DATA
+# Stores the following into the cell_data dictionary:
+# Depth, Parent Position, Parent Direction, Open Directions
 func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 	var coords_to_direction = {Vector2i.UP: 1, Vector2i.RIGHT: 2, Vector2i.DOWN: 4, Vector2i.LEFT: 8}
 	for cell in cells_to_fill:
@@ -223,13 +234,13 @@ func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 		if open_directions.size() > 0:
 			add_to_expandable_rooms(cell)
 
-#GET POWERSET
-#input set: possible elements (directions)
-#output set: all combinations of possible directions, including empty
-#we include empty because we will append the parent direction to each element in this array
-#so each element will have the parent direction plus other possible combinations
-#this is more efficient than appending the parent direction beforehand, getting the non-empty powerset, 
-#and filtering out those that dont have the parent direction as an elelment
+# GET POWERSET
+# Input set: possible elements (directions)
+# Output set: all combinations of possible directions, including empty
+# The empty set is included because the parent direction will be appended to each element in this array
+# So each element will have the parent direction plus other possible combinations
+# This is more efficient than appending the parent direction beforehand, getting the non-empty powerset, 
+# And filtering out those that dont have the parent direction as an elelment
 func get_powerset(input_set: Array) -> Array:
 	var result := [[]]
 	for element in input_set:
@@ -240,11 +251,11 @@ func get_powerset(input_set: Array) -> Array:
 		result += new_subsets
 	return result
 
-#GET POSSIBLE ROOMS
-#input set: possible combinations from powerset
-#output set: possible combinations with parent direction appended to each element
-#by default, the parent direction will always not be included because get_wall_openings detects the direction as blocked
-#so we append the parent direction to each array in the array to get the possible spawnable rooms
+# GET POSSIBLE ROOMS
+# Input set: possible combinations from powerset
+# Output set: possible combinations with parent direction appended to each element, summed
+# By default, the parent direction will always not be included because get_wall_openings detects the direction as blocked
+# The parent direction is appended to each array to get the list of possible spawnable rooms
 func get_possible_rooms(input_set: Array, number_to_append: int) -> Array:
 	var output_set = []
 	for subset in input_set:
@@ -258,9 +269,10 @@ func get_possible_rooms(input_set: Array, number_to_append: int) -> Array:
 
 
 
-#MARK CELLS TO FILL NEXT
-#occupies tiles it will branch towards on the next iteration with placeholder texture
-#so that other cells dont open towards it and cause conflict
+# MARK CELLS TO FILL NEXT
+# Occupies tiles it will branch towards on the next iteration with a placeholder dot
+# This makes it so that nearby cells detect this cell as occupied
+# And prevents them from opening towards it and causing collision conflict
 func mark_cells_to_fill_next(cell: Vector2i):
 	var parent = cell_data[cell][PARENT_POSITION]
 	var room_id: int = get_cell_atlas_coords(0, cell).x
@@ -278,9 +290,9 @@ func mark_cells_to_fill_next(cell: Vector2i):
 # FUNCTIONS TO MANIPULATE MAP STRUCTURE #
 #########################################
 
-#MANIPULATE MAP
-#all methods to manipulate map structure goes here
-func manipulate_map(cell: Vector2i, room_selection: Array):
+# MANIPULATE ROOM SELECTION
+# all methods to manipulate rooom selection goes here
+func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
 	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
 	if current_map_size + rooms_expected_next_iteration >= map_size:
@@ -296,17 +308,14 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 1:
+	if rooms_expected_next_iteration > 10:
 		force_spawn_room(parent_direction, room_selection)
-	# sample 2: prevents the map from having less than 4 branching paths per iteration
-#	if rooms_expected_next_iteration < 1:
-#		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
-#ADD ROOMS TO POOL
-#input: array of rooms added to pool and how many times to add
-#checks if the room already exists in the selection by default and only then increases its odds
-#this prevents rooms from spawning room types that mismatch
+# ADD ROOMS TO POOL
+# Input: array of rooms to add and its frequency
+# Checks if the room already exists in the selection by default and only then increases its odds
+# This is done to prevent rooms from spawning room types that mismatch
 func add_rooms_to_pool(rooms: Array, frequency: int, room_selection: Array):
 	for room in rooms:
 		if (room_selection.has(room)):
@@ -314,18 +323,19 @@ func add_rooms_to_pool(rooms: Array, frequency: int, room_selection: Array):
 				room_selection.append(room)
 				frequency -= 1
 
-#DELETE ROOMS FROM POOL
-#input: array of rooms deleted from pool
-#only deletes the said room if it isnt the only available room to spawn
-#this prevents null error when calling the method that spawns room because the array is empty
+# DELETE ROOMS FROM POOL
+# Input: array of rooms deleted from pool
+# Only deletes the said room the room pool has more than 1 element
+# This is done to prevent null error and ensures an emtpy array is never passed back
 func delete_rooms_from_pool(rooms: Array, room_selection: Array):
 	for room in rooms:
 		if (room_selection.size() > 1):
 			room_selection.erase(room)
 
-#FORCE SPAWN CLOSING ROOM
-#input: the direction of the room relative to its parent
-#forces the room selection to have the room linking to its parent as the only option
+# FORCE SPAWN ROOM
+# Input: room id
+# Output: array with the input room id as the only element
+# Only forces spawning the room if the room already exists in the room selection
 func force_spawn_room(room: int, room_selection: Array):
 	if room_selection.has(room):
 		room_selection.clear()
@@ -338,29 +348,25 @@ func force_spawn_room(room: int, room_selection: Array):
 # FUNCTIONS FOR HANDLING MAP EXPANSION #
 ########################################
 
-enum expand_modes {MAX, MIN, RANDOM, CUSTOM}
+enum expand_modes {MAX, MIN, RANDOM}
 ## How map expansion is handled when map generation halts prematurely [br]
 ## Max: expand from highest depth [br]
 ## Min: expand from lowest depth  [br]
 ## Random: expand from a random depth  [br]
-## Custom: expand from a custom depth [br]
 @export var expand_mode := expand_modes.RANDOM
-
-
-
-
 
 ## Tracker for how many times map expansion is requested
 var expand_count: int = 0
 
-#EXPAND MAP
-#if map gets forced to close by chance or circumstance but the cell count isnt achieved yet, run this algorithm
-#creates an open branch from one of the available expandable closing rooms
+# EXPAND MAP
+# If map gets forced to close by chance or circumstance but the cell count isnt achieved yet, run this algorithm
+# Creates an open branch from one of the available expandable rooms
 func expand_map():
-	expand_count += 4
+	expand_count += 1
 	var room_to_expand = get_room_to_expand()
 	if room_to_expand == null:
 		return
+
 	var room_id: int = get_cell_atlas_coords(0, room_to_expand).x
 	var expandable_directions: Array = cell_data[room_to_expand][OPEN_DIRECTIONS]
 	var selected_expand_direction: int = select_random_element(expandable_directions)
@@ -377,8 +383,8 @@ func expand_map():
 	fill_cell(expand_location)
 	current_map_size += 1
 
-#GET ROOM TO OPEN
-#Selects 1 room from the list of expandable closing rooms depending on the value of expand_mode
+# GET ROOM TO EXPAND
+# Selects 1 room from the list of expandable rooms depending on the value of expand_mode
 func get_room_to_expand():
 	var room_to_expand := Vector2i.ZERO
 	var available_depths = expandable_rooms_by_depth.keys()
@@ -403,17 +409,13 @@ func get_room_to_expand():
 		expand_modes.RANDOM:
 			var from_random_depth: int = available_depths[random_d]
 			room_selection = expandable_rooms_by_depth[from_random_depth]
-		expand_modes.CUSTOM:
-			available_depths.sort()
-			var from_custom_depth: int = available_depths[max_d * 0.6]
-			room_selection = expandable_rooms_by_depth[from_custom_depth]
 	
 	room_to_expand = select_random_element(room_selection)
 	return room_to_expand
 
-#SELECT RANDOM ELEMENT
-#input: array
-#output: random element inside the array
+# SELECT RANDOM ELEMENT
+# Input: array
+# Output: random element inside the array
 func select_random_element(array: Array):
 	var max_num: int = array.size() - 1
 	var select_random : int = rng.randi_range(0, max_num)
@@ -427,10 +429,8 @@ func select_random_element(array: Array):
 # FUNCTIONS TO MANAGE CLOSING ROOMS #
 #####################################
 
-#ADD TO CLOSING ROOMS AND CHECK EXPANDABILITY
-#called every time a room spawned in spawn_rooms() is a closing room
-#appends the closing room to the closing_room array and checks if it is expandable
-#adds it to the expandable_closing_room and expandable_closing_room_by_depth dictionaries if returns true
+# ADD TO EXPANDABLE_ROOMS
+# Called in store_cell_data whenever the room has at least 1 empty von neumann neighbor
 func add_to_expandable_rooms(room: Vector2i):
 	expandable_rooms.append(room)
 	var depth = cell_data[room][DEPTH]
@@ -440,12 +440,11 @@ func add_to_expandable_rooms(room: Vector2i):
 		expandable_rooms_by_depth[depth] = [room]
 
 
-#UPDATE NEIGHBOR CLOSING ROOM
-#subtracts 1 from the value of the current expandable closing room
-#this is done because it just found itself a new neighbor which occupies one of its expandable directions.
-#checks if it has less than 2 openings left after updating, and removes it from the list if true
-#this is a very cheap way to update the available open directions of every expandable closing room as we only update those
-#that are direct neighbors of recently to-be-added rooms
+# UPDATE NEIGHBOR ROOMS
+# Called in mark_cells_to_fill_next, for every dot placed
+# For each cell neighbor of the dot, remove its respective direction from the neighbor's opening directions
+# This is a very cheap way to update the available open directions of every expandable room 
+# As only the direct neighbors of recently to-be-added rooms are updated every iteration
 func update_neighbor_rooms(room):
 	var directions = {Vector2i.UP: 4, Vector2i.RIGHT: 8, Vector2i.DOWN: 1, Vector2i.LEFT: 2}
 	for direction in directions:
@@ -455,12 +454,11 @@ func update_neighbor_rooms(room):
 			if cell_data[neighbor][OPEN_DIRECTIONS].is_empty():
 				delete_from_expandable_rooms(neighbor)
 
-#SET CLOSING ROOM AS NON EXPANDABLE
-#deletes the closing room from the expandable closing rooms dictionaries
-#deletes the entire depth entry in expandable closing rooms by depth if the depth batch has zero contents
+# DELETE CLOSING ROOMS FROM POOL
+# Deletes the room from the expandable rooms list
+# Deletes the entire depth entry in expandable rooms by depth if the depth batch has zero contents
 func delete_from_expandable_rooms(room):
 	if !expandable_rooms.has(room):
-		#print("a")
 		return
 	expandable_rooms.erase(room)
 	var depth = cell_data[room][DEPTH]

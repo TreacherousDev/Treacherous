@@ -108,7 +108,7 @@ func animate_path(path: Array):
 
 #MANIPULATE MAP
 #all methods to manipulate map structure goes here
-func manipulate_map(cell: Vector2i, room_selection: Array):
+func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
 	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
 	if current_map_size + rooms_expected_next_iteration >= map_size:
