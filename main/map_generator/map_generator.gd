@@ -75,7 +75,7 @@ func start():
 	var start_from = Vector2i.ZERO
 	var start_id = 4
 	set_cell(0, start_from, 0, Vector2i(start_id, 0))
-	cell_data[start_from] = [0, null, null, [2, 4]]
+	cell_data[start_from] = [0, null, null, []]
 	current_map_size += 1
 	add_to_expandable_rooms(start_from)
 	mark_cells_to_fill_next(start_from)
@@ -89,7 +89,8 @@ func start():
 		if active_cells.size() == 0 and current_map_size < map_size:
 			pass
 			expand_map()
-	
+	print(expandable_rooms)
+	print(expandable_rooms_by_depth)
 	end_production()
 	
 
@@ -384,8 +385,6 @@ func get_room_to_expand():
 	
 	if expandable_rooms_by_depth.is_empty():
 		return null
-		
-	available_depths.sort()
 	
 	var min_d: int = 0
 	var max_d: int = available_depths.size() - 1
@@ -394,15 +393,18 @@ func get_room_to_expand():
 	
 	match expand_mode:
 		expand_modes.MAX:
+			available_depths.sort()
 			var from_max_depth: int = available_depths[max_d]
 			room_selection = expandable_rooms_by_depth[from_max_depth]
 		expand_modes.MIN:
+			available_depths.sort()
 			var from_min_depth: int = available_depths[min_d]
 			room_selection = expandable_rooms_by_depth[from_min_depth]
 		expand_modes.RANDOM:
 			var from_random_depth: int = available_depths[random_d]
 			room_selection = expandable_rooms_by_depth[from_random_depth]
 		expand_modes.CUSTOM:
+			available_depths.sort()
 			var from_custom_depth: int = available_depths[max_d * 0.6]
 			room_selection = expandable_rooms_by_depth[from_custom_depth]
 	

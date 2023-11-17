@@ -53,8 +53,10 @@ var pointer_2
 var pointer_1_path = []
 var pointer_2_path = []
 func create_path():
-	pointer_1 = mouseclick_1
-	pointer_2 = mouseclick_2
+#	pointer_1 = mouseclick_1
+#	pointer_2 = mouseclick_2
+	pointer_1 = Vector2i(0, 0)
+	pointer_2 = Vector2i(149, 79)
 	
 	if pointer_1 == pointer_2:
 		print("You are already here!")
@@ -125,16 +127,18 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 	if cell.y <= 0:
 		delete_rooms_from_pool([1, 3, 5, 7, 9, 11, 13, 15], room_selection)
 		cell_data[cell][OPEN_DIRECTIONS].erase(1)
-	if cell.x >= 299:
+	if cell.x >= 149:
 		delete_rooms_from_pool([2, 3, 6, 7, 10, 11, 14, 15], room_selection)
 		cell_data[cell][OPEN_DIRECTIONS].erase(2)
-	if cell.y >= 149:
+	if cell.y >= 79:
 		delete_rooms_from_pool([4, 5, 6, 7, 12, 13, 14, 15], room_selection)
 		cell_data[cell][OPEN_DIRECTIONS].erase(4)
 	if cell_data[cell][OPEN_DIRECTIONS].is_empty():
 		delete_from_expandable_rooms(cell)
 		
 		
-	if rooms_expected_next_iteration > 12:
+	if rooms_expected_next_iteration > 5:
 		force_spawn_room(parent_direction, room_selection)
+	if rooms_expected_next_iteration < 1:
+		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
