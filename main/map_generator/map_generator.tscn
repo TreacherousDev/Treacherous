@@ -1,10 +1,34 @@
-[gd_scene load_steps=7 format=3 uid="uid://c1vd466ox1ip5"]
+[gd_scene load_steps=9 format=3 uid="uid://c1vd466ox1ip5"]
 
-[ext_resource type="TileSet" uid="uid://7vhpumv5yog1" path="res://main/resources/map_generator_rooms.tres" id="1_jgpx7"]
+[ext_resource type="Texture2D" uid="uid://d4a4ed4ns6an4" path="res://main/resources/maze_tilemaps-spritesheet.png" id="1_6bmm3"]
 [ext_resource type="Script" path="res://main/map_generator/rooms_generator.gd" id="2_ns4qq"]
 [ext_resource type="PackedScene" uid="uid://crfmts8vvxs4a" path="res://main/map_generator/path_marker.tscn" id="3_na7s7"]
 [ext_resource type="Texture2D" uid="uid://cyvhphdgsa8h7" path="res://main/icon.svg" id="4_u83wp"]
 [ext_resource type="Script" path="res://main/map_generator/draw_path.gd" id="5_psan5"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uffu7"]
+texture = ExtResource("1_6bmm3")
+texture_region_size = Vector2i(60, 60)
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+10:0/0 = 0
+11:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+14:0/0 = 0
+15:0/0 = 0
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_8ajov"]
+tile_size = Vector2i(60, 60)
+sources/0 = SubResource("TileSetAtlasSource_uffu7")
 
 [sub_resource type="PackedScene" id="PackedScene_oyyxc"]
 _bundled = {
@@ -20,18 +44,18 @@ _bundled = {
 }
 
 [node name="Tilemap" type="TileMap"]
-tile_set = ExtResource("1_jgpx7")
+tile_set = SubResource("TileSet_8ajov")
 format = 2
 script = ExtResource("2_ns4qq")
 icon1 = ExtResource("3_na7s7")
 icon2 = SubResource("PackedScene_oyyxc")
 map_size = 180000
-batch_size = 4
+batch_size = 100
 expand_mode = 0
 
 [node name="Camera2D" type="Camera2D" parent="."]
 anchor_mode = 0
-zoom = Vector2(0.2, 0.2)
+zoom = Vector2(0.1, 0.1)
 
 [node name="draw_path" type="Node2D" parent="."]
 script = ExtResource("5_psan5")
