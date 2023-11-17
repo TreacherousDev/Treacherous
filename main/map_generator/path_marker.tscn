@@ -3,5 +3,5 @@
 [ext_resource type="Texture2D" uid="uid://cqdnt6pexx27k" path="res://red-sticker-arrow.png" id="1_51ho2"]
 
 [node name="Icon" type="Sprite2D" groups=["path_marker"]]
-scale = Vector2(0.025, 0.025)
+scale = Vector2(0.03, 0.03)
 texture = ExtResource("1_51ho2")

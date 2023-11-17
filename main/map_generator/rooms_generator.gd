@@ -110,7 +110,7 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
 	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
 	if current_map_size + rooms_expected_next_iteration >= map_size:
-		force_spawn_closing_room(parent_direction, room_selection)
+		force_spawn_room(parent_direction, room_selection)
 	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
 		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
 	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
@@ -120,12 +120,30 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 # EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
-	
-	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 8:
-		force_spawn_closing_room(parent_direction, room_selection)
-	# sample 2: prevents the map from having less than 4 branching paths per iteration
-#	if rooms_expected_next_iteration < 1:
-#		delete_rooms_from_pool([parent_direction], room_selection)
-#	add_rooms_to_pool([10], 100, room_selection)
+	if cell == Vector2i(148, 0):
+		force_spawn_room(10, room_selection)
+		force_spawn_room(6, room_selection)
+	if cell == Vector2i(0, 78):
+		force_spawn_room(5, room_selection)
+		force_spawn_room(6, room_selection)
+	if cell == Vector2i(148, 79):
+		force_spawn_room(10, room_selection)
+		force_spawn_room(3, room_selection)
+	if cell.x <= 0:
+		delete_rooms_from_pool([8, 9, 10, 11, 12, 13, 14, 15], room_selection)
+		delete_from_expandable_rooms(cell)
+	if cell.y <= 0:
+		delete_rooms_from_pool([1, 3, 5, 7, 9, 11, 13, 15], room_selection)
+		delete_from_expandable_rooms(cell)
+	if cell.x >= 149:
+		delete_rooms_from_pool([2, 3, 6, 7, 10, 11, 14, 15], room_selection)
+		delete_from_expandable_rooms(cell)
+	if cell.y >= 79:
+		delete_rooms_from_pool([4, 5, 6, 7, 12, 13, 14, 15], room_selection)
+		delete_from_expandable_rooms(cell)
+	if current_map_size < 10:
+		delete_rooms_from_pool([parent_direction], room_selection)
+		
+	if rooms_expected_next_iteration > 12:
+		force_spawn_room(parent_direction, room_selection)
 ################################################################################################

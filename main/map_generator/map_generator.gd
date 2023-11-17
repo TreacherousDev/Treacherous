@@ -73,9 +73,10 @@ func draw_edge():
 ## Initialzes the algorithm from the origin
 func start():
 	var start_from = Vector2i.ZERO
-	var start_id = 15
+	var start_id = 4
 	set_cell(0, start_from, 0, Vector2i(start_id, 0))
-	cell_data[start_from] = [0, null, null, 4]
+	cell_data[start_from] = [0, null, null, room_id_to_directions[start_id].size()]
+	current_map_size += 1
 	add_to_expandable_rooms(start_from)
 	mark_cells_to_fill_next(start_from)
 	active_cells.append(start_from)
@@ -282,7 +283,7 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
 	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
 	if current_map_size + rooms_expected_next_iteration >= map_size:
-		force_spawn_closing_room(parent_direction, room_selection)
+		force_spawn_room(parent_direction, room_selection)
 	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
 		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
 	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
@@ -295,7 +296,7 @@ func manipulate_map(cell: Vector2i, room_selection: Array):
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
 	if rooms_expected_next_iteration > 1:
-		force_spawn_closing_room(parent_direction, room_selection)
+		force_spawn_room(parent_direction, room_selection)
 	# sample 2: prevents the map from having less than 4 branching paths per iteration
 #	if rooms_expected_next_iteration < 1:
 #		delete_rooms_from_pool([parent_direction], room_selection)
@@ -324,9 +325,10 @@ func delete_rooms_from_pool(rooms: Array, room_selection: Array):
 #FORCE SPAWN CLOSING ROOM
 #input: the direction of the room relative to its parent
 #forces the room selection to have the room linking to its parent as the only option
-func force_spawn_closing_room(direction: int, room_selection: Array):
-	room_selection.clear()
-	room_selection.append(direction)
+func force_spawn_room(room: int, room_selection: Array):
+	if room_selection.has(room):
+		room_selection.clear()
+		room_selection.append(room)
 
 
 
@@ -354,8 +356,10 @@ var expand_count: int = 0
 #if map gets forced to close by chance or circumstance but the cell count isnt achieved yet, run this algorithm
 #creates an open branch from one of the available expandable closing rooms
 func expand_map():
-	expand_count += 1
+	expand_count += 4
 	var room_to_expand = get_room_to_expand()
+	if room_to_expand == null:
+		return
 	var room_id: int = get_cell_atlas_coords(0, room_to_expand).x
 	var expandable_directions: Array = get_wall_openings(room_to_expand)
 	var selected_expand_direction: int = select_random_element(expandable_directions)
@@ -374,10 +378,13 @@ func expand_map():
 
 #GET ROOM TO OPEN
 #Selects 1 room from the list of expandable closing rooms depending on the value of expand_mode
-func get_room_to_expand() -> Vector2i:
+func get_room_to_expand():
 	var room_to_expand := Vector2i.ZERO
 	var available_depths = expandable_rooms_by_depth.keys()
 	
+	if expandable_rooms_by_depth.is_empty():
+		return null
+		
 	available_depths.sort()
 	
 	var min_d: int = 0
@@ -450,6 +457,8 @@ func update_neighbor_rooms(room):
 #deletes the closing room from the expandable closing rooms dictionaries
 #deletes the entire depth entry in expandable closing rooms by depth if the depth batch has zero contents
 func delete_from_expandable_rooms(room):
+	if !expandable_rooms.has(room):
+		return
 	expandable_rooms.erase(room)
 	var depth = cell_data[room][DEPTH]
 	expandable_rooms_by_depth[depth].erase(room)
