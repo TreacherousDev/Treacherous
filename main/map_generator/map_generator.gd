@@ -75,7 +75,7 @@ func start():
 	var start_from = Vector2i.ZERO
 	var start_id = 4
 	set_cell(0, start_from, 0, Vector2i(start_id, 0))
-	cell_data[start_from] = [0, null, null, room_id_to_directions[start_id].size()]
+	cell_data[start_from] = [0, null, null, [2, 4]]
 	current_map_size += 1
 	add_to_expandable_rooms(start_from)
 	mark_cells_to_fill_next(start_from)
@@ -217,9 +217,9 @@ func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 	for cell in cells_to_fill:
 		var parent_cell_direction = coords_to_direction[parent_cell - cell]
 		var parent_depth = cell_data[parent_cell][DEPTH]
-		var open_directions = get_wall_openings(cell).size()
+		var open_directions = get_wall_openings(cell)
 		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions]
-		if open_directions > 0:
+		if open_directions.size() > 0:
 			add_to_expandable_rooms(cell)
 
 #GET POWERSET
@@ -361,7 +361,7 @@ func expand_map():
 	if room_to_expand == null:
 		return
 	var room_id: int = get_cell_atlas_coords(0, room_to_expand).x
-	var expandable_directions: Array = get_wall_openings(room_to_expand)
+	var expandable_directions: Array = cell_data[room_to_expand][OPEN_DIRECTIONS]
 	var selected_expand_direction: int = select_random_element(expandable_directions)
 	var expanded_room: int = room_id + selected_expand_direction
 	var expand_location = convert_directions_to_cells_coords([selected_expand_direction], room_to_expand)[0]
@@ -445,12 +445,12 @@ func add_to_expandable_rooms(room: Vector2i):
 #this is a very cheap way to update the available open directions of every expandable closing room as we only update those
 #that are direct neighbors of recently to-be-added rooms
 func update_neighbor_rooms(room):
-	var directions = [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
+	var directions = {Vector2i.UP: 4, Vector2i.RIGHT: 8, Vector2i.DOWN: 1, Vector2i.LEFT: 2}
 	for direction in directions:
 		var neighbor = room + direction
-		if cell_data.has(neighbor):
-			cell_data[neighbor][OPEN_DIRECTIONS] -= 1
-			if cell_data[neighbor][OPEN_DIRECTIONS] == 0:
+		if expandable_rooms.has(neighbor):
+			cell_data[neighbor][OPEN_DIRECTIONS].erase(directions[direction])
+			if cell_data[neighbor][OPEN_DIRECTIONS].is_empty():
 				delete_from_expandable_rooms(neighbor)
 
 #SET CLOSING ROOM AS NON EXPANDABLE
@@ -458,6 +458,7 @@ func update_neighbor_rooms(room):
 #deletes the entire depth entry in expandable closing rooms by depth if the depth batch has zero contents
 func delete_from_expandable_rooms(room):
 	if !expandable_rooms.has(room):
+		#print("a")
 		return
 	expandable_rooms.erase(room)
 	var depth = cell_data[room][DEPTH]
