@@ -30,6 +30,13 @@ var room_id_to_directions = {
 	15: [1, 2, 4, 8]
 	}
 
+var direction_to_coords = {
+	1 : Vector2i.UP, 
+	2 : Vector2i.RIGHT, 
+	4 : Vector2i.DOWN, 
+	8 : Vector2i.LEFT
+	}
+
 ## The current active cells that the algorithm iterates through
 var active_cells := []
 ## The next batch of active cells, that will be revalued to active cells after active cells is done iterating
@@ -43,6 +50,8 @@ var current_map_size: int = 0
 var expandable_rooms = []
 ## Same list, but sorted by depth for fast retrieval (see expand_map())
 var expandable_rooms_by_depth = {}
+
+var closing_rooms = []
 
 ## Key: tilemap coordinates of cell
 ## Value: array with the following contsts as indexes
@@ -165,6 +174,8 @@ func fill_cell(cell):
 func spawn_room(cell_to_fill: Vector2i, room_selection: Array):
 	var select_random : int = rng.randi_range(0, room_selection.size() - 1)
 	var selected_room : int = room_selection[select_random]
+	if selected_room == cell_data[cell_to_fill][PARENT_DIRECTION]:
+		closing_rooms.append(cell_to_fill)
 	set_cell(0, cell_to_fill, 0, Vector2i(selected_room, 0))
 
 # GET WALL OPENINGS
@@ -194,7 +205,6 @@ func get_cells_to_fill(cell: Vector2i) -> Array:
 	var parent = cell_data[cell][PARENT_POSITION]
 	if parent != null:
 		cells_to_fill.erase(parent)
-	store_cell_data(cells_to_fill, cell)
 	return cells_to_fill
 
 # GET ROOM SELECTION
@@ -212,7 +222,6 @@ func get_room_selection(cell_to_fill: Vector2i) -> Array:
 # Output: producible cell positions relative to parent
 # Ex: (0, 0) is a left-right room type, output becomes [(1, 0) (-1, 0)]
 func convert_directions_to_cells_coords(directions: Array, parent_cell: Vector2i) -> Array:
-	var direction_to_coords = {1 : Vector2i.UP, 2 : Vector2i.RIGHT, 4 : Vector2i.DOWN, 8 : Vector2i.LEFT}
 	var cells_to_fill = []
 	for direction in directions.size():
 		var cell = direction_to_coords[directions[direction]] + parent_cell
@@ -274,6 +283,7 @@ func mark_cells_to_fill_next(cell: Vector2i):
 	var branch_directions = room_id_to_directions[room_id]
 	var cells_to_fill_next = convert_directions_to_cells_coords(branch_directions, cell)
 	cells_to_fill_next.erase(parent)
+	store_cell_data(cells_to_fill_next, cell)
 	for cell_to_fill_next in cells_to_fill_next:
 		set_cell(0, cell_to_fill_next, 0, Vector2i.ZERO)
 		rooms_expected_next_iteration += 1
@@ -303,8 +313,11 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 10:
+	if rooms_expected_next_iteration > 20:
 		force_spawn_room(parent_direction, room_selection)
+		# sample 1: prevents the map from branching more than 10 branching paths per iteration
+	if rooms_expected_next_iteration < 2:
+		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
 # ADD ROOMS TO POOL
@@ -360,7 +373,9 @@ func expand_map():
 	var room_to_expand = get_room_to_expand()
 	if room_to_expand == null:
 		return
-
+	if closing_rooms.has(room_to_expand):
+		closing_rooms.erase(room_to_expand)
+	
 	var room_id: int = get_cell_atlas_coords(0, room_to_expand).x
 	var expandable_directions: Array = cell_data[room_to_expand][OPEN_DIRECTIONS]
 	var selected_expand_direction: int = select_random_element(expandable_directions)

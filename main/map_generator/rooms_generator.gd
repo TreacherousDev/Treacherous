@@ -133,12 +133,12 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	if cell.y >= 79:
 		delete_rooms_from_pool([4, 5, 6, 7, 12, 13, 14, 15], room_selection)
 		cell_data[cell][OPEN_DIRECTIONS].erase(4)
+
 	if cell_data[cell][OPEN_DIRECTIONS].is_empty():
 		delete_from_expandable_rooms(cell)
-		
-		
-	if rooms_expected_next_iteration > 10:
-		force_spawn_room(parent_direction, room_selection)
-	if rooms_expected_next_iteration < 1:
-		delete_rooms_from_pool([parent_direction], room_selection)
+
+	delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
+#	if rooms_expected_next_iteration <= 1:
+#		delete_rooms_from_pool([parent_direction], room_selection)
+
 ################################################################################################

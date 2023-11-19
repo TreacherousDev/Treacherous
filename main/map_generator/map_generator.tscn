@@ -1,8 +1,7 @@
-[gd_scene load_steps=7 format=3 uid="uid://c1vd466ox1ip5"]
+[gd_scene load_steps=6 format=3 uid="uid://c1vd466ox1ip5"]
 
 [ext_resource type="Texture2D" uid="uid://dkamn0fxapn38" path="res://maze_tilemaps-spritesheet.png" id="1_7tex5"]
-[ext_resource type="Script" path="res://main/map_generator/rooms_generator.gd" id="2_ns4qq"]
-[ext_resource type="PackedScene" uid="uid://crfmts8vvxs4a" path="res://main/map_generator/path_marker.tscn" id="3_na7s7"]
+[ext_resource type="Script" path="res://maze_generator.gd" id="2_oo4ym"]
 [ext_resource type="Script" path="res://main/map_generator/draw_path.gd" id="5_psan5"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ca71t"]
@@ -32,15 +31,14 @@ sources/0 = SubResource("TileSetAtlasSource_ca71t")
 [node name="Tilemap" type="TileMap"]
 tile_set = SubResource("TileSet_8ajov")
 format = 2
-script = ExtResource("2_ns4qq")
-icon1 = ExtResource("3_na7s7")
-icon2 = ExtResource("3_na7s7")
-map_size = 100000
+script = ExtResource("2_oo4ym")
+map_size = 50000
+batch_size = 10
 expand_mode = 0
 
 [node name="Camera2D" type="Camera2D" parent="."]
 anchor_mode = 0
-zoom = Vector2(0.2, 0.2)
+zoom = Vector2(0.4, 0.4)
 
 [node name="draw_path" type="Node2D" parent="."]
 script = ExtResource("5_psan5")
