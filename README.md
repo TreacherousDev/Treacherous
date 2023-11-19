@@ -1,50 +1,36 @@
-### Version 1.0 Release Summary - Cellular Procedural Generation Map Algorithm
+Treacherous
 
-This powerful algorithm creates intricate and diverse maps using cellular automata. Here's a summary of what is included in this release:
+A family of tree automata based cellular procedural generation algorithms, created by TreacherousDev.
 
-### Key Features:
-1. Flexible Map Generation:
-    Generate complex maps with branching paths.
-    Easily customizable parameters to control map size, room types, and expansion behavior.
+Introduction to Tree Automata:
+A tree automaton is a computational model used in computer science and mathematics to process and analyze tree-like structures. 
 
-2. Dynamic Room Spawning:
-    The algorithm intelligently spawns rooms, ensuring connectivity and logical layout.
-    i.e: a room with an open left branch always connects to a room with an open right branch
+Formally, a tree automaton comprises a set of states, a transition function, and acceptance criteria. These automata traverse a tree structure in a top-down manner, moving from node to node based on the transition function and changing states accordingly. At each step, the automaton reads the current node's label and transitions between states according to the rules defined in the transition function.
 
-3. Map Expansion Customization:
-    Choose from multiple expansion modes (Max, Min, Random, Custom) to handle map expansion when generation stops prematurely
+In the context of procedural generation, tree automoata can be utilized to create acyclic dungeons and mazes when implemented onto a 2 dimensional grid with context-sensitive production rules based on von neumann neighborhood.
 
-4. Reproducibility and Seed Support:
-    Utilizes RandomNumberGenerator to ensure reproducibility via seeding.
-    Create consistent maps for replicable gameplay / debugging
+Given the von neumann directions Up, Right, Down and Left, we can assign each one of these an int value that acts as a bit flag, which allows us to map a unique room ID for all possible combinations of directions. 
 
-5. Customizability:
-    Clear and well-commented codebase for easy understanding and modification.
-    Customize room spawning rules, map expansion behavior, and room selection strategies.
-   
-6. Pathfinding:
-    Click on any room in the map to draw a path to the origin
-
-### Use Cases:
-1. Roguelike Levels
-    Seamlessly integrate this algorithm into your roguelike game project to serve as its map generator, ensuring a unique yet consistent experience with each run.
-
-https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/8c0011b7-291a-4d2b-849e-e305e007b105
+In this algorithm, the values are as follows:
+Up: 1
+Right: 2
+Down: 4
+Left: 8
 
 
+The algorithm starts by initializing a root room from the origin. We configure its cell data like this:
+cell_data[root_room][0, null, null, [1, 2, 4, 8]]
+The indexes for the cell data are as follows:
+Index 0: Cell Depth — How many rooms to traverse before reaching the root room
+Index 1: Cell Parent Direction — The direction of the parent relative to the current cell, expressed as a bit flag int. 
+Index 2: Cell Parent Position — The position of the parent cell, expressed as a Vector2i.
+Index 3: Open Direction — An array of all the unoccupied von neumann neighbors of the cell, each direction expressed as a bit flag. 
 
-2. Realistic Island Outlines
-    Given a large enough map size and custom modification of room spawning conditions, this generator is able to create organic looking shapes that resemble large islands.
+Because the root room has no parent, we set index 1 and 2 to null, but the proceeding cells will have these values filled accordingly. 
 
-https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/c726e56b-3b55-47b8-a6bf-307f902d1dc8
+Afterwards, we move onto the spawning process. Spawning happens in 2 phases: The first phase spawns the room with the assigned ID, and the second phase spawns temporary dots to the directions it branches towards.
 
+This second phase plays a crucial role in avoiding collision conflict as diagonally adjacent neighbors will now detect the coordinate with a temporary dot as occupied, and wont try to branch towards it. This works because the algorithm runs on a single thread, and that the second phase of the last cell must first be completed before proceeding with the first phase of the next cell.
 
-### How to Use:
-1. Install this as a ZIP file
-2. Open Godot Enigne and extract from there
-NOTE: For versions 4.0 and above only!
-
-Documentation is a work in progress, but the codebase is well maintained with comments for the meantime.
-
-
+After the spawning phase is completed, the root room is appended to the active_cells array, and the function run_algorithm() is called. This function is responsible for iterating through all elements in active cells and is the primary loop that powers this procedural generator.
 
