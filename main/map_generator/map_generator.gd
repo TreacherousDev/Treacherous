@@ -31,10 +31,10 @@ var room_id_to_directions = {
 	}
 
 var direction_to_coords = {
-	1 : Vector2i.UP, 
-	2 : Vector2i.RIGHT, 
-	4 : Vector2i.DOWN, 
-	8 : Vector2i.LEFT
+	1: Vector2i.UP, 
+	2: Vector2i.RIGHT, 
+	4: Vector2i.DOWN, 
+	8: Vector2i.LEFT
 	}
 
 ## The current active cells that the algorithm iterates through
@@ -87,7 +87,6 @@ func draw_edge():
 	pass
 
 
-
 ################
 # START METHOD #
 ################
@@ -126,7 +125,6 @@ func run_algorithm():
 	next_active_cells.clear()
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 	active_cells = shuffle_array_with_seed(active_cells)
-	
 	for cell in active_cells:
 		fill_cell(cell)
 		rooms_expected_next_iteration -= 1
@@ -360,7 +358,6 @@ var expand_count: int = 0
 # If map gets forced to close by chance or circumstance but the cell count isnt achieved yet, run this algorithm
 # Creates an open branch from one of the available expandable rooms
 func expand_map():
-	print("a")
 	expand_count += 1
 	var room_to_expand = get_room_to_expand()
 	if room_to_expand == null:
@@ -379,6 +376,7 @@ func expand_map():
 	update_neighbor_rooms(expand_location)
 	store_cell_data([expand_location], room_to_expand)
 	next_active_cells.append(expand_location)
+	rooms_expected_next_iteration += 1
 	current_map_size += 1
 
 # GET ROOM TO EXPAND
