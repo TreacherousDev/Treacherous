@@ -19,13 +19,13 @@ Given the von neumann directions Up, Right, Down and Left, we can assign each on
 | LEFT          | 8             |
 
 Given these values, we can create 15 unique combinations of rooms which comprises of 1 to 4 of these directions, all with their own unique number from 1 to 15.
-For deomstration purposes, numbers 10 to 15 shall be expressed in hexadecimal notation (A - F) to make diagrams look more uniform.
+For deomstration purposes, numbers shall be expressed in hexadecimal notation (1 - F) so that each number occupies only 1 character to make diagrams look more uniform.
 
 
 # Automata Sequence
-The algorithm starts by initializing a root room from the origin (0, 0). Then, the branch direction of the cell are marked.
-
-In this example, the root room will be 3, which has an up (1) and right (2) direction.
+The algorithm starts by initializing a root room from (0, 0). The branch direction of the cell are marked and set as children of the origin.
+In this example, the root room is 3, which has an up (1) and right (2) direction.
+So we set (0, 1) and (1,0) as children of (0,0).
 ```
 -------   -------
 -------   ---@---
@@ -33,38 +33,22 @@ In this example, the root room will be 3, which has an up (1) and right (2) dire
 -------   -------
 -------   -------
 ```
-We then create 2 lists: active_cells and next_active_cells, both with an empty starting value.
-The root cell is then put into next_active_cells list, and the main algorithm loop starts.
-
-The algorithm sets the value of next_active_cells into active_cells, and the contents of next_active_cells are cleared. The reason this is done is important and will be explained later on.
-The algorithm then iterates through all cells in active_cells.
-
-For each cell in active cells, it does the following:
-1. Get the branch directions of the current cell, excluding its parent
-2. For each branch direction, store a reference to the current cell. These cells will be assigned as children of the current cell.
-3. Iterate through all children and do as follows:
-   1.  Write it down onto the next_active_cells list
-   2.  Get all non-empty neighbors of the cell
-   3.  Get the powerset of the combination of all non-empty neighbors (include empty)
-   4.  For each set in the powerset, append the parent direction and get the sum of all elements. Store the values in a new list called room_selection
-   5.  Select 1 random element from the room_selection list
-   6.  Mark all the opening directions of the selected element, excluding the direction of its parent
-4. If there exists at least 1 element in next_active_cells:
+We then proceed with the folllowing sequence:
+1. Get all children of the current cell.
+2. For each child, do as follows:
+   1.  Get all non-empty neighbors
+   2.  Get the powerset of the combination of all non-empty neighbors (include empty)
+   3.  For each set in the powerset, append the parent direction and get the sum of all elements in each set. Store the values in a list called room_selection
+   5.  Select 1 random element from room_selection and set it as the new value of the current cell
+   6.  Mark all the opening directions of the current cell, excluding the direction of its parent
+   7.  For each marked direction, set it as a child of the current cell.
+3. If there exists at least 1 element in next_active_cells:
    1.  Move the contents of next_active_cells to active_cells
    2.  Run the algorithm again.
 
 Let's run through this algorithm step by step and simulate the map in real time.
-In the example earlier, the branch directions of the root node are up and right. Since this is the root node, it does nto have a parent so we ignore that rule.
-We then set (0, 0) as the parent of all branch directions, and assign each direction a reference value to its parent. We give the cell at coordinate (0, 1) a parent direction of 4 (down), the one at (1, 0) a parent direction of 8 (left).
-
-```
--------   -------
--------   ---@---
----3---   ---3@--
--------   -------
--------   -------
-```
-We then iterate through all children of (0, 0). Let's start with (0,1).
+In the example earlier, the root room has two children: (0,1) and (1,0)
+We iterate through all children starting with (0, 1). In the diagram below, X will be used to show the currently selected child.
 ```
 -------     
 ---X---  
@@ -72,7 +56,7 @@ We then iterate through all children of (0, 0). Let's start with (0,1).
 -------   
 -------   
 ```
-We then get all non-empty neighbors of (0, 1), as expressed with the symbol \#
+We get all empty von neumann neighbors of X. In this case, the empty neighbors are up, right and left.
 ```
 -------   ---#---  
 ---X---   --#X#-- 
@@ -80,28 +64,33 @@ We then get all non-empty neighbors of (0, 1), as expressed with the symbol \#
 -------   -------  
 -------   -------  
 ```
-We then get the powerset of all non-empty directions. The directions up, right and left are converted into their respective int values: {1, 2, 4}
-And we calculate for P{ 1, 4, 8 }, which produces:
+We then get the powerset of the set of all empty neighbors.
+Converted into their respective int values:
 ```
-{ {}, {1}, {2}, {4}, {1, 2}, {1, 4}, {2, 4}, {1, 2, 4} }
+{up, right, left}
+{1, 2, 8}
 ```
-We then get the parent direction of (0, 1) which we set earlier as 8, and append it to every element in the powerset. So our updated set would be:
+We then calculate for P( {1, 2, 4} ), which produces:
 ```
-{ {8}, {1, 8}, {2, 8}, {4, 8}, {1, 2, 8}, {1, 4, 8}, {2, 4, 8}, {1, 2, 4, 8} }
+{ {}, {1}, {2}, {8}, {1, 2}, {1, 8}, {2, 8}, {1, 2, 8} }
 ```
-Lastly, we take the sum of the elements of each sub element to get the room IDs, which will now be out room selection.
+We then get the parent direction of the current cell (0,1) which is 8 (parent is located down), and append it to every element in the powerset. So our updated set would be:
 ```
-{8, 9, A, C, B, D, E, F}
+{ {4}, {1, 4}, {2, 4}, {8, 4}, {1, 2, 4}, {1, 8, 4}, {2, 8, 4, {1, 2, 8, 4} }
+```
+Lastly, we take the sum of the elements of each sub element to get the room IDs, which will now be our room selection.
+```
+{4, 5, 6, 7, C, D, E, F}
 ```
 We then select a random element from this list and set it as the coordinate's room ID. 
 ```
 ------- 
----A---
+---E---
 ---3@-- 
 -------
 -------
 ```
-Then, we mark all branching directions of the room (E) excluding its parent.
+Then, we mark all branching directions of the cell based on its ID (E) excluding its parent, and set those cells as its children.
 ```
 ------- 
 --@E@--
