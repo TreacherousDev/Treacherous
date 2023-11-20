@@ -100,7 +100,6 @@ func start():
 	current_map_size += 1
 	add_to_expandable_rooms(start_from)
 	mark_cells_to_fill(start_from)
-	next_active_cells.append(start_from)
 	
 	while (next_active_cells.size() != 0):
 		iterations += 1
@@ -108,7 +107,6 @@ func start():
 			await get_tree().process_frame
 		run_algorithm()
 		if next_active_cells.size() == 0 and current_map_size < map_size:
-			pass
 			expand_map()
 	end_production()
 
@@ -130,14 +128,9 @@ func run_algorithm():
 	active_cells = shuffle_array_with_seed(active_cells)
 	
 	for cell in active_cells:
-		var cells_to_fill = cell_data[cell][CHILDREN]
-		cells_to_fill = shuffle_array_with_seed(cells_to_fill)
-		
-		for cell_to_fill in cells_to_fill:
-			next_active_cells.append(cell_to_fill)
-			fill_cell(cell_to_fill)
-			rooms_expected_next_iteration -= 1
-			current_map_size += 1
+		fill_cell(cell)
+		rooms_expected_next_iteration -= 1
+		current_map_size += 1
 
 # END PRODUCTION
 func end_production():
@@ -285,6 +278,7 @@ func mark_cells_to_fill(cell: Vector2i):
 		set_cell(0, cell_to_fill, 0, Vector2i.ZERO)
 		rooms_expected_next_iteration += 1
 		update_neighbor_rooms(cell_to_fill)
+		next_active_cells.append(cell_to_fill)
 
 
 
@@ -366,6 +360,7 @@ var expand_count: int = 0
 # If map gets forced to close by chance or circumstance but the cell count isnt achieved yet, run this algorithm
 # Creates an open branch from one of the available expandable rooms
 func expand_map():
+	print("a")
 	expand_count += 1
 	var room_to_expand = get_room_to_expand()
 	if room_to_expand == null:
@@ -377,16 +372,13 @@ func expand_map():
 	var expandable_directions: Array = cell_data[room_to_expand][OPEN_DIRECTIONS]
 	var selected_expand_direction: int = select_random_element(expandable_directions)
 	var expanded_room: int = room_id + selected_expand_direction
-	var expand_location = convert_directions_to_cells_coords([selected_expand_direction], room_to_expand)[0]
 	set_cell(0, room_to_expand, 0, Vector2i(expanded_room, 0))
+	
+	var expand_location = convert_directions_to_cells_coords([selected_expand_direction], room_to_expand)[0]
 	set_cell(0, expand_location, 0, Vector2i(0, 0))
 	update_neighbor_rooms(expand_location)
-	
-
-	next_active_cells.append(expand_location)
-	
 	store_cell_data([expand_location], room_to_expand)
-	fill_cell(expand_location)
+	next_active_cells.append(expand_location)
 	current_map_size += 1
 
 # GET ROOM TO EXPAND
