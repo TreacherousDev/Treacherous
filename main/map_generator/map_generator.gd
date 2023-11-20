@@ -64,6 +64,7 @@ const PARENT_POSITION = 1
 const PARENT_DIRECTION = 2
 ## Array containing unoccupied directions, expressed as bit flags
 const OPEN_DIRECTIONS = 3
+const CHILDREN = 4
 
 
 func _ready():
@@ -95,10 +96,10 @@ func start():
 	var start_from = Vector2i.ZERO
 	var start_id = 4
 	set_cell(0, start_from, 0, Vector2i(start_id, 0))
-	cell_data[start_from] = [0, null, null, []]
+	cell_data[start_from] = [0, null, null, [], []]
 	current_map_size += 1
 	add_to_expandable_rooms(start_from)
-	mark_cells_to_fill_next(start_from)
+	mark_cells_to_fill(start_from)
 	active_cells.append(start_from)
 	
 	while (active_cells.size() != 0):
@@ -127,7 +128,7 @@ func run_algorithm():
 	active_cells = shuffle_array_with_seed(active_cells)
 	
 	for cell in active_cells:
-		var cells_to_fill = get_cells_to_fill(cell)
+		var cells_to_fill = cell_data[cell][CHILDREN]
 		cells_to_fill = shuffle_array_with_seed(cells_to_fill)
 		
 		for cell_to_fill in cells_to_fill:
@@ -167,7 +168,7 @@ func fill_cell(cell):
 	var room_selection = get_room_selection(cell)
 	manipulate_room_selection(cell, room_selection)
 	spawn_room(cell, room_selection)
-	mark_cells_to_fill_next(cell)
+	mark_cells_to_fill(cell)
 
 # SPAWN ROOMS
 # Pick a random available room from the selection and set the cell to its value
@@ -237,7 +238,8 @@ func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 		var parent_cell_direction = coords_to_direction[parent_cell - cell]
 		var parent_depth = cell_data[parent_cell][DEPTH]
 		var open_directions = get_wall_openings(cell)
-		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions]
+		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions, []]
+		cell_data[parent_cell][CHILDREN].append(cell)
 		if open_directions.size() > 0:
 			add_to_expandable_rooms(cell)
 
@@ -273,21 +275,17 @@ func get_possible_rooms(input_set: Array, number_to_append: int) -> Array:
 		output_set.append(sum)
 	return output_set
 
-# MARK CELLS TO FILL NEXT
+# MARK CELLS TO FILL
 # Occupies tiles it will branch towards on the next iteration with a placeholder dot
 # This makes it so that nearby cells detect this cell as occupied
 # And prevents them from opening towards it and causing collision conflict
-func mark_cells_to_fill_next(cell: Vector2i):
-	var parent = cell_data[cell][PARENT_POSITION]
-	var room_id: int = get_cell_atlas_coords(0, cell).x
-	var branch_directions = room_id_to_directions[room_id]
-	var cells_to_fill_next = convert_directions_to_cells_coords(branch_directions, cell)
-	cells_to_fill_next.erase(parent)
-	store_cell_data(cells_to_fill_next, cell)
-	for cell_to_fill_next in cells_to_fill_next:
-		set_cell(0, cell_to_fill_next, 0, Vector2i.ZERO)
+func mark_cells_to_fill(cell: Vector2i):
+	var cells_to_fill = get_cells_to_fill(cell)
+	store_cell_data(cells_to_fill, cell)
+	for cell_to_fill in cells_to_fill:
+		set_cell(0, cell_to_fill, 0, Vector2i.ZERO)
 		rooms_expected_next_iteration += 1
-		update_neighbor_rooms(cell_to_fill_next)
+		update_neighbor_rooms(cell_to_fill)
 
 
 
