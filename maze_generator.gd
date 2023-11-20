@@ -17,6 +17,7 @@ func connect_dead_ends():
 	for room in rooms_to_handle:
 		var room_id: int = get_cell_atlas_coords(0, room).x
 		if room_id == cell_data[room][PARENT_DIRECTION]:
+			await get_tree().process_frame
 			connect_to_neighbor(room, room_id)
 
 func connect_to_neighbor(closing_room: Vector2i, room_id: int):
@@ -86,8 +87,15 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	if cell_data[cell][OPEN_DIRECTIONS].is_empty():
 		delete_from_expandable_rooms(cell)
 
-	delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
-	if rooms_expected_next_iteration <= 1:
+
+	var branch_numbers = 2
+	delete_rooms_from_pool([15], room_selection)
+	delete_rooms_from_pool([7, 11, 13, 14], room_selection)
+	if rooms_expected_next_iteration < branch_numbers:
+#		expand_map()
+		pass
+
+	if rooms_expected_next_iteration <= branch_numbers:
 		delete_rooms_from_pool([parent_direction], room_selection)
 
 ################################################################################################

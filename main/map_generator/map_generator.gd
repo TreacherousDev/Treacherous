@@ -100,14 +100,14 @@ func start():
 	current_map_size += 1
 	add_to_expandable_rooms(start_from)
 	mark_cells_to_fill(start_from)
-	active_cells.append(start_from)
+	next_active_cells.append(start_from)
 	
-	while (active_cells.size() != 0):
+	while (next_active_cells.size() != 0):
 		iterations += 1
 		if iterations % batch_size == 0:
 			await get_tree().process_frame
 		run_algorithm()
-		if active_cells.size() == 0 and current_map_size < map_size:
+		if next_active_cells.size() == 0 and current_map_size < map_size:
 			pass
 			expand_map()
 	end_production()
@@ -124,6 +124,8 @@ var iterations: int = 0
 #############
 # Gets called again and again untill map generation is completed
 func run_algorithm():
+	active_cells = next_active_cells.duplicate()
+	next_active_cells.clear()
 	#randomize order so that one side doesnt have skewed chances of spawning rooms with more branches
 	active_cells = shuffle_array_with_seed(active_cells)
 	
@@ -136,9 +138,6 @@ func run_algorithm():
 			fill_cell(cell_to_fill)
 			rooms_expected_next_iteration -= 1
 			current_map_size += 1
-			
-	active_cells = next_active_cells.duplicate()
-	next_active_cells.clear()
 
 # END PRODUCTION
 func end_production():
@@ -383,8 +382,8 @@ func expand_map():
 	set_cell(0, expand_location, 0, Vector2i(0, 0))
 	update_neighbor_rooms(expand_location)
 	
-	active_cells.clear()
-	active_cells.append(expand_location)
+
+	next_active_cells.append(expand_location)
 	
 	store_cell_data([expand_location], room_to_expand)
 	fill_cell(expand_location)
