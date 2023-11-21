@@ -86,7 +86,7 @@ func _process(_delta):
 func draw_edge():
 	pass
 
-var request_expansion = false
+var expansion_requests: int = 0
 ################
 # START METHOD #
 ################
@@ -95,7 +95,7 @@ func start():
 	var start_from = Vector2i.ZERO
 	var start_id = 4
 	set_cell(0, start_from, 0, Vector2i(start_id, 0))
-	cell_data[start_from] = [0, null, null, [2], []]
+	cell_data[start_from] = [0, null, null, [], []]
 	current_map_size += 1
 	mark_cells_to_fill(start_from)
 	
@@ -103,13 +103,17 @@ func start():
 		iterations += 1
 		if iterations % batch_size == 0:
 			await get_tree().process_frame
-#			await get_tree().create_timer(0.2).timeout
+			await get_tree().process_frame
+		
 		run_algorithm()
+		
 		if next_active_cells.size() == 0 and current_map_size < map_size:
+			expansion_requests += 1
+		
+		for i in range(expansion_requests):
 			expand_map()
-		if request_expansion == true:
-			expand_map()
-			request_expansion = false
+		expansion_requests = 0
+		
 	end_production()
 
 
@@ -233,8 +237,6 @@ func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 		var open_directions = get_wall_openings(cell)
 		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions, []]
 		cell_data[parent_cell][CHILDREN].append(cell)
-#		if open_directions.size() > 0:
-#			add_to_expandable_rooms(cell)
 
 # GET POWERSET
 # Input set: possible elements (directions)

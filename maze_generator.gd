@@ -43,16 +43,16 @@ func connect_to_neighbor(closing_room: Vector2i, room_id: int):
 
 # GET WALL OPENINGS
 # Input: position of cell
-# Output: array containing all unoccupied von neuman neighbors, expressed as int bit flags
+# Output: array containing all non-border von neuman neighbors, expressed as int bit flags
 func get_neighbors(cell: Vector2i) -> Array:
 	var neighbors = []
-	if get_cell_atlas_coords(0, cell + Vector2i.UP) != Vector2i(-1, -1):
+	if get_cell_atlas_coords(0, cell + Vector2i.UP) != Vector2i.ZERO:
 		neighbors.append(1)
-	if get_cell_atlas_coords(0, cell + Vector2i.RIGHT) != Vector2i(-1, -1):
+	if get_cell_atlas_coords(0, cell + Vector2i.RIGHT) != Vector2i.ZERO:
 		neighbors.append(2)
-	if get_cell_atlas_coords(0, cell + Vector2i.DOWN) != Vector2i(-1, -1):
+	if get_cell_atlas_coords(0, cell + Vector2i.DOWN) != Vector2i.ZERO:
 		neighbors.append(4)
-	if get_cell_atlas_coords(0, cell + Vector2i.LEFT) != Vector2i(-1, -1):
+	if get_cell_atlas_coords(0, cell + Vector2i.LEFT) != Vector2i.ZERO:
 		neighbors.append(8)
 	return neighbors
 
@@ -71,29 +71,12 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
 
-	if cell.x <= 0:
-		delete_rooms_from_pool([8, 9, 10, 11, 12, 13, 14, 15], room_selection)
-		cell_data[cell][OPEN_DIRECTIONS].erase(8)
-	if cell.y <= 0:
-		delete_rooms_from_pool([1, 3, 5, 7, 9, 11, 13, 15], room_selection)
-		cell_data[cell][OPEN_DIRECTIONS].erase(1)
-	if cell.x >= 74:
-		delete_rooms_from_pool([2, 3, 6, 7, 10, 11, 14, 15], room_selection)
-		cell_data[cell][OPEN_DIRECTIONS].erase(2)
-	if cell.y >= 39:
-		delete_rooms_from_pool([4, 5, 6, 7, 12, 13, 14, 15], room_selection)
-		cell_data[cell][OPEN_DIRECTIONS].erase(4)
-
-	if cell_data[cell][OPEN_DIRECTIONS].is_empty():
-		delete_from_expandable_rooms(cell)
-
-
-	var branch_numbers = 3
+	var branch_numbers = 1
 	delete_rooms_from_pool([15], room_selection)
 	delete_rooms_from_pool([7, 11, 13, 14], room_selection)
+	
 	if rooms_expected_next_iteration < branch_numbers:
-		request_expansion = true
-	if rooms_expected_next_iteration <= branch_numbers:
-		delete_rooms_from_pool([parent_direction], room_selection)
+		expansion_requests += 1
+#	delete_rooms_from_pool([parent_direction], room_selection)
 
 ################################################################################################
