@@ -86,7 +86,7 @@ func _process(_delta):
 func draw_edge():
 	pass
 
-
+var request_expansion = false
 ################
 # START METHOD #
 ################
@@ -95,18 +95,21 @@ func start():
 	var start_from = Vector2i.ZERO
 	var start_id = 4
 	set_cell(0, start_from, 0, Vector2i(start_id, 0))
-	cell_data[start_from] = [0, null, null, [], []]
+	cell_data[start_from] = [0, null, null, [2], []]
 	current_map_size += 1
-	add_to_expandable_rooms(start_from)
 	mark_cells_to_fill(start_from)
 	
 	while (next_active_cells.size() != 0):
 		iterations += 1
 		if iterations % batch_size == 0:
 			await get_tree().process_frame
+#			await get_tree().create_timer(0.2).timeout
 		run_algorithm()
 		if next_active_cells.size() == 0 and current_map_size < map_size:
 			expand_map()
+		if request_expansion == true:
+			expand_map()
+			request_expansion = false
 	end_production()
 
 
@@ -230,8 +233,8 @@ func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 		var open_directions = get_wall_openings(cell)
 		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions, []]
 		cell_data[parent_cell][CHILDREN].append(cell)
-		if open_directions.size() > 0:
-			add_to_expandable_rooms(cell)
+#		if open_directions.size() > 0:
+#			add_to_expandable_rooms(cell)
 
 # GET POWERSET
 # Input set: possible elements (directions)
@@ -277,6 +280,8 @@ func mark_cells_to_fill(cell: Vector2i):
 		rooms_expected_next_iteration += 1
 		update_neighbor_rooms(cell_to_fill)
 		next_active_cells.append(cell_to_fill)
+	if cell_data[cell][OPEN_DIRECTIONS].size() > 0:
+		add_to_expandable_rooms(cell)
 
 
 
@@ -372,17 +377,18 @@ func expand_map():
 	set_cell(0, room_to_expand, 0, Vector2i(expanded_room, 0))
 	
 	var expand_location = convert_directions_to_cells_coords([selected_expand_direction], room_to_expand)[0]
-	set_cell(0, expand_location, 0, Vector2i(0, 0))
-	update_neighbor_rooms(expand_location)
 	store_cell_data([expand_location], room_to_expand)
-	next_active_cells.append(expand_location)
+	set_cell(0, expand_location, 0, Vector2i(0, 0))
 	rooms_expected_next_iteration += 1
+	update_neighbor_rooms(expand_location)
+	next_active_cells.append(expand_location)
+	
 	current_map_size += 1
 
 # GET ROOM TO EXPAND
 # Selects 1 room from the list of expandable rooms depending on the value of expand_mode
 func get_room_to_expand():
-	var room_to_expand := Vector2i.ZERO
+	var room_to_expand := Vector2i.ZERO 
 	var available_depths = expandable_rooms_by_depth.keys()
 	
 	if expandable_rooms_by_depth.is_empty():
@@ -442,7 +448,7 @@ func update_neighbor_rooms(room):
 	var directions = {Vector2i.UP: 4, Vector2i.RIGHT: 8, Vector2i.DOWN: 1, Vector2i.LEFT: 2}
 	for direction in directions:
 		var neighbor = room + direction
-		if expandable_rooms.has(neighbor):
+		if cell_data.has(neighbor):
 			cell_data[neighbor][OPEN_DIRECTIONS].erase(directions[direction])
 			if cell_data[neighbor][OPEN_DIRECTIONS].is_empty():
 				delete_from_expandable_rooms(neighbor)

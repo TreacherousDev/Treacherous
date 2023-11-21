@@ -88,10 +88,11 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 		delete_from_expandable_rooms(cell)
 
 
-	var branch_numbers = 1
+	var branch_numbers = 3
 	delete_rooms_from_pool([15], room_selection)
-	if rooms_expected_next_iteration >= branch_numbers:
-		delete_rooms_from_pool([7, 11, 13, 14], room_selection)
+	delete_rooms_from_pool([7, 11, 13, 14], room_selection)
+	if rooms_expected_next_iteration < branch_numbers:
+		request_expansion = true
 	if rooms_expected_next_iteration <= branch_numbers:
 		delete_rooms_from_pool([parent_direction], room_selection)
 

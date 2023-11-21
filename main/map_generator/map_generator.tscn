@@ -34,8 +34,7 @@ format = 2
 script = ExtResource("2_oo4ym")
 braid_percentage = 0.0
 map_size = 50000
-batch_size = 2
-expand_mode = 0
+batch_size = 3
 
 [node name="Camera2D" type="Camera2D" parent="."]
 anchor_mode = 0
