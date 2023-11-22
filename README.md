@@ -69,7 +69,7 @@ O(right) = left
 
 {right} --> {left} | {right, left} | {down, left} | {right, down, left}
 ```
-On this iteration , it must then transition to all its open branches, excluding its parent branch. If we take {left, right, down} as the production of {right}, this is what happens on the next transition:
+On the next iteration, it must then transition to all its open branches, excluding its parent branch. Here, we take {left, right, down} as the production of {right}, and we must then transition to the directions right and down.
 ![Screenshot (543)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9a2da299-1bcf-4d3f-822c-f194b30a66fe)
 ```
 Let R = {right, down, left}
