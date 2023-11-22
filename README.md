@@ -26,7 +26,7 @@ A
 b
 ```
 # Grammar Definition
-This tree automaton works in the same way, but with the following context-sensitive rules and constraints: 
+This tree automaton works in the same way as described above, but with the following context-sensitive rules and constraints: 
 1. The automaton is implemented on a 2 dimensional square grid, and each node in the tree can detect the vacancy of its von neumann neighbors.
 2. A node represents a room, which must comprise of 1 or more branch directions from the set of von neumann directions.  
 We can create 15 unique rooms by combining 1 to 4 elements from the set of von neumann directions {up, right, down, left}. 
