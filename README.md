@@ -1,50 +1,231 @@
-### Version 1.0 Release Summary - Cellular Procedural Generation Map Algorithm
+# Treacherous
 
-This powerful algorithm creates intricate and diverse maps using cellular automata. Here's a summary of what is included in this release:
-
-### Key Features:
-1. Flexible Map Generation:
-    Generate complex maps with branching paths.
-    Easily customizable parameters to control map size, room types, and expansion behavior.
-
-2. Dynamic Room Spawning:
-    The algorithm intelligently spawns rooms, ensuring connectivity and logical layout.
-    i.e: a room with an open left branch always connects to a room with an open right branch
-
-3. Map Expansion Customization:
-    Choose from multiple expansion modes (Max, Min, Random, Custom) to handle map expansion when generation stops prematurely
-
-4. Reproducibility and Seed Support:
-    Utilizes RandomNumberGenerator to ensure reproducibility via seeding.
-    Create consistent maps for replicable gameplay / debugging
-
-5. Customizability:
-    Clear and well-commented codebase for easy understanding and modification.
-    Customize room spawning rules, map expansion behavior, and room selection strategies.
-   
-6. Pathfinding:
-    Click on any room in the map to draw a path to the origin
-
-### Use Cases:
-1. Roguelike Levels
-    Seamlessly integrate this algorithm into your roguelike game project to serve as its map generator, ensuring a unique yet consistent experience with each run.
-
-https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/8c0011b7-291a-4d2b-849e-e305e007b105
+A family of cellular procedural generation algorithms powered by probabilistic, context-sensitive tree automata.
 
 
+# Introduction to Tree Automata
+A tree automaton is a computational model used in computer science and mathematics to process and analyze tree-like structures.
 
-2. Realistic Island Outlines
-    Given a large enough map size and custom modification of room spawning conditions, this generator is able to create organic looking shapes that resemble large islands.
+Formally, a tree automaton comprises a set of states, a transition function, and acceptance criteria. These automata traverse a tree structure in a top-down manner, moving from node to node based on the transition function and changing states accordingly. At each step, the automaton reads the current node's label and transitions to available states according to the rules defined in the transition function.
 
-https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/c726e56b-3b55-47b8-a6bf-307f902d1dc8
+Example:
+```
+S --> A
+A --> A | A + b | b | A + c | c
+
+    S
+    |
+    A
+   / \
+  A   b
+ / \
+A   c
+|
+A
+|
+b
+```
+# Grammar Definition
+This tree automaton works in the same way as described above, but with the following context-sensitive rules and constraints: 
+1. The automaton is implemented on a 2 dimensional square grid, and each node in the tree can detect the vacancy of its von neumann neighbors.
+2. Each node stores a reference direction to its parent.
+3. A node represents a room, which must comprise of 1 or more branch directions from the set of von neumann directions.  
+We can create 15 unique rooms by combining 1 to 4 directions {up, right, down, left}. 
+![mapcombos](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/243fadcb-2b51-468b-ba0d-9513f2921067)
+4. Each room shall produce 1 room for each branch, 1 tile away according to its direction. The branch connecting to its parent is excluded from production.
+5. Each room produced must consist of zero or more branches connecting to an unoccupied von neumann neighbor, plus a brach connecting to its parent.
+6. The automata initializes with a root room which can be any of the 15 possible rooms.
 
 
-### How to Use:
-1. Install this as a ZIP file
-2. Open Godot Enigne and extract from there
-NOTE: For versions 4.0 and above only!
+With this set of rules, the grammar for our automata will be as follows:
+```
+Let direction = D
+    D: {up, right, down, left}
+Let opposite = O(x)
+    O(up) = down
+    O(right) = left
+    O(down) = up
+    O(left) = right
+Let branch = B
+    B ∈ D
+Let unoccupied directions = N
+    N ⊆ D | B = unoccupied, for every B in N
+Let room produced = R'
+    R' = { A + O(B) | A ⊆ N }
 
-Documentation is a work in progress, but the codebase is well maintained with comments for the meantime.
+S = { R | R ⊆ N | R ≠ ∅ }
+S --> { R' | R' = A + O(B) | A ⊆ N } for every B in S
+R --> { R' | R' = A + O(B) | A ⊆ N } for every B in R, excluding parent direction
+```
+
+Example: 
+![Screenshot (542)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/5d105a1f-b875-440a-aea0-fdbbc6bc95e3)
+```
+Let S = {right}
+
+N(right) = {right, down}
+O(right) = left
+
+{right} --> {left} | {right, left} | {down, left} | {right, down, left}
+```
+If we take {left, right, down} as the production of {right}, this is what happens on the next transition:
+![Screenshot (543)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9a2da299-1bcf-4d3f-822c-f194b30a66fe)
+```
+Let R = {right, down, left}
+
+Parent directon = left
+
+N(right) = {right}
+O(right) = left
+
+N(down) = {down}
+O(down) = up
+
+{left, right, down} --> ( {left} | {right, left} ) + ( {up} | (up, down} )
+```
+The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 3. 
 
 
+# Automata Sequence
+## Design Architecture
+To avoid collision conflict, it is crucial thar the tree automaton produces new states in a single thread. That is, there must only be one active room transitioning at any given time, and transition calculation and execution must be done completely before selecting another room to activate.
+To ensure a fair growth pattern, producton of new rooms must be done in a breadth first manner. That is, we select active rooms by batch, and we set the newly produced rooms from the current batch as the next batch. We only move to the next batch after we are done iterating through all rooms in the current batch.
 
+## Syntax Implementation
+We can assign each primary direction an int value that acts as a bit flag. In this algorithm, the values assigned are as follows:  
+| Direction     | Int Value     |
+| ------------- | ------------- |
+| UP            | 1             |
+| RIGHT         | 2             |
+| DOWN          | 4             |
+| LEFT          | 8             |
+
+With the assigned values, we can map each room to their unique room number by getting the sum of their directions.
+For deomstration purposes, numbers shall be expressed in hexadecimal notation (1 - F) so that each number occupies only 1 character to make diagrams look more uniform.
+
+## Sequence
+The algorithm starts by initializing a root room from the origin. Its branch directions are then marked and set as its children.  
+In this example, the root room is 3, which has an up (1) and right (2) direction.  
+So we set the cell above it and the cell to its right as its children, and mark them accordingly. We'll use the symbol @ to visualize marked cells.
+```
+-------   -------
+-------   ---@---
+---3---   ---3@--
+-------   -------
+-------   -------
+```
+We then proceed with the folllowing sequence:
+1. For each marked cell, do as follows:
+   1.  Get all its unoccupied neighbors
+   2.  Get the powerset of the combination of all nunoccupied neighbors (include empty)
+   3.  For each set in the powerset, append the parent direction and get the sum of all elements in each set. Store the values in a list called room_selection
+   5.  Select 1 random element from room_selection and set it as the new value of the current cell
+   6.  Based on its value (room ID), mark all the opening directions and set them as children, excluding the direction of its parent.
+2. Get the next batch of marked cells and repeat.
+
+Let's run through this algorithm step by step and simulate the map in real time.
+In the example earlier, there are 2 marked cells.
+We iterate through all marked cells starting with the top one. The symbol X will be used to show the currently selected cell.
+```
+-------     
+---X---  
+---3@--     
+-------   
+-------   
+```
+We get all unoccupied von neumann neighbors of the currently selected cell. In this case, the unoccupied neighbors are up, right and left, as expressed with the # symbols.
+```
+-------   ---#---  
+---X---   --#X#-- 
+---3@--   ---3@--   
+-------   -------  
+-------   -------  
+```
+We then get the powerset of the set of all unoccupied neighbors.
+Converted into their respective int values:
+```
+{up, right, left}
+{1, 2, 8}
+```
+We calculate for its powerset P( {1, 2, 8} ) which produces:
+```
+{ {}, {1}, {2}, {8}, {1, 2}, {1, 8}, {2, 8}, {1, 2, 8} }
+```
+We then get the parent direction of the current cell (which is 4 as the parent is located down), and append it to every element in the powerset. So our updated set would be:
+```
+{ {4}, {1, 4}, {2, 4}, {8, 4}, {1, 2, 4}, {1, 8, 4}, {2, 8, 4, {1, 2, 8, 4} }
+```
+Lastly, we take the sum of the elements of each sub element to get the room IDs, which will now be our room selection.
+```
+{4, 5, 6, 7, C, D, E, F}
+```
+We then select a random element from this list and set it as the coordinate's new value (room ID). 
+```
+------- 
+---E---
+---3@-- 
+-------
+-------
+```
+Then, we mark all its branching directions according to its room ID (E) excluding its parent direction, and set those cells as its children.  
+We'll use the symbol $ to differentiate newly marked cells from the currently marked cells we iterate through.
+```
+E: [2, 4, 8]
+parent direction: 4
+[2, 4, 8] - 4 = [2, 8]
+Mark directions 2 and 8
+```
+```
+------- 
+--$E$--
+---3@-- 
+-------
+-------
+```
+
+We repeat the same sequence of events for the right cell, and it should look like this:
+```
+-------   -------   -------   -------
+--$E$--   --$E$--   --$E$--   --$E$--
+---3X--   ---3X#-   ---3C--   ---3C--
+-------   ----#--   -------   ----$--
+-------   -------   -------   -------
+```
+After all marked cells are iterated through, we get the next batch of marked cells and iterate through them. So we'll transform all $ into @ and repeat the process till there isnt any $ left to update.  
+Sample production:
+```
+-------
+--$E$--
+---3C--
+----$--
+-------
+      
+-------   -------   --#----   -------   -------   ----#--   -------   ----$--   ----$--   ----$--   ----$--   ----$--
+--@E@--   --XE@--   -#XE@--   --2E@--   --2EX--   --2EX#-   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--
+---3C--   ---3C--   --#3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--
+----@--   ----@--   ----@--   ----@--   ----@--   ----@--   ----@--   ----@--   ----X--   ---#X#-   ----9--   ---$9--
+-------   -------   -------   -------   -------   -------   -------   -------   -------   ----#--   -------   -------
+
+----@--   ----X--   ---#X#-   ----C--   ---$C--   ---$C--   ---$C--   ---$C--   ---$C--
+--2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--
+---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--
+---@9--   ---@9--   ---@9--   ---@9--   ---@9--   ---X9--   --#X9--   ---A9--   --$A9--
+-------   -------   -------   -------   -------   -------   ---#---   -------   -------
+
+---@C--   ---XC--   --#XC--   ---2C--   ---2C--   ---2C--   ---2C--   ---2C--
+--2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--
+---3C--   ---3C--   ---3C--   ---3C--   ---3C--   --#3C--   ---3C--   ---3C--
+--@A9--   --@A9--   --@A9--   --@A9--   --XA9--   -#XA9--   --6A9--   --6A9--
+-------   -------   -------   -------   -------   --#----   -------   --$----
+
+---2C--   ---2C--   ---2C--   ---2C--
+--2E9--   --2E9--   --2E9--   --2E9--
+---3C--   ---3C--   ---3C--   ---3C--
+--6A9--   --6A9--   --6A9--   --6A9--
+--@----   --X----   -#X#---   --1----
+```
+If we map each number to their respective room value, it should look like this:
+
+![map](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9c00c436-1a28-4e9c-86d3-0e3ae5c57dce)
+
+WIP - Will keep this updated!
