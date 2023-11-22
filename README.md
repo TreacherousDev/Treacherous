@@ -34,7 +34,7 @@ We can create 15 unique rooms by combining 1 to 4 directions {up, right, down, l
 ![mapcombos](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/243fadcb-2b51-468b-ba0d-9513f2921067)
 4. Each room shall produce 1 room for each branch, 1 tile away according to its direction. The branch connecting to its parent is excluded from production.
 5. Each room produced must consist of zero or more branches connecting to an unoccupied von neumann neighbor, plus a brach connecting to its parent.
-6. The automata initializes with a root room which can be any of the 15 possible rooms.
+6. The automata initializes with a root room which must contain 1 or more branches connecting to an unoccupied von neumann neighbor.
 
 ## Formal Grammar Definition
 With this set of rules, the grammar for our automata will be as follows:
