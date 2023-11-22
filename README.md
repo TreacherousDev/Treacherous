@@ -102,7 +102,8 @@ We can assign each primary direction an int value that acts as a bit flag. In th
 | LEFT          | 8             |
 
 With the assigned values, we can map each room to their unique room number by getting the sum of their directions.
-For deomstration purposes, numbers shall be expressed in hexadecimal notation (1 - F) so that each number occupies only 1 character to make diagrams look more uniform.
+For deomstration purposes, numbers shall be expressed in hexadecimal notation (1 - F) so that each number occupies only 1 character to make diagrams look more uniform.  
+![tileset](https://github.com/TreacherousDev/Treacherous/assets/55629534/8d6f0203-dd5b-4180-b6b6-af52358b6e81)
 
 ## Sequence
 The algorithm starts by initializing a root room from the origin. Its branch directions are then marked and set as its children.  
