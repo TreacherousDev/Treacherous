@@ -89,7 +89,7 @@ The automaton will continue transitioning unitll there are no more transitions l
 
 # Automata Sequence
 ## Design Architecture
-To avoid collision conflict, it is crucial thar the tree automaton produces new states in a single thread. That is, there must only be one active room transitioning at any given time, and transition calculation and execution must be done completely before selecting another room to activate.
+To avoid collision conflict, it is crucial thar the tree automaton produces new rooms in a single thread. That is, there must only be one active room transitioning at any given time, and transition calculation and execution must be done completely before selecting another room to activate.
 To ensure a fair growth pattern, producton of new rooms must be done in a breadth first manner. That is, we select active rooms by batch, and we set the newly produced rooms from the current batch as the next batch. We only move to the next batch after we are done iterating through all rooms in the current batch.
 
 ## Syntax Implementation
