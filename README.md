@@ -49,7 +49,7 @@ Let opposite direction = O(x)
 Let branch = B
     B ∈ D
 Let unoccupied directions = N
-    N ⊆ D | B = unoccupied, for every B in N
+    N ⊆ D | B in N = unoccupied, for every B in N
 Let room produced = R'
     R' = { A + O(B) | A ⊆ N }
 
