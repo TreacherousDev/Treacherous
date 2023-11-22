@@ -28,11 +28,19 @@ A
 |
 b
 ```
-This tree automaton works in the same way. Given the von neumann directions Up, Right, Down and Left, we can create 15 unique rooms.
+This tree automaton works in the same way, but with the following ruleset and constraints:  
+1. Each room produced must  consist of zero or more empty von neumann neighbors, plus its parent direction.
+2. Each room shall produce 1 room for each branch, except the branch connecting to its parent.
+
+We can create 15 unique rooms by combining 1 to 4 elements from the set of von neumann directions {up, right, down and left}. 
 ![mapcombos](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/243fadcb-2b51-468b-ba0d-9513f2921067)
 
-Each room can produce a new set of rooms for each opening direction, and each room produced by its opening direction must have a matching opposite direction to connect to the parent room.  
-In simpler terms, if I have a room with a right branch, the rooms that the right branch produces should only be room with a matching left branch, plus other directions.
+![Screenshot (542)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/5d105a1f-b875-440a-aea0-fdbbc6bc95e3)
+
+
+
+The grammar for our automata will be as follows:
+
 ```
 Let direction = D
     D: {up, right, down, left}
@@ -41,18 +49,21 @@ Let opposite = O(x)
     O(right) = left
     O(down) = up
     O(left) = right
-
 Let room = R
     R ⊆ D
 Let branch = B
     B ∈ R
 
-For B in R, produce R wherein:
-R ⊆ D | O(B) ∈ R
+For B in R, produce R' wherein:
+R' ⊆ D | O(B) ∈ R'
 ```
-
-![roomexample](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/22dcf7a5-5b81-4a9e-a267-6244e4931a21)
-
+We then want to constraint production so that it doesn't produce a room at the direction of its parent and cause an infinite loop.
+So the grammar would look something like this:
+```
+S --> { R' | R' ⊆ D }
+R --> { R' | R' ⊆ D | O(B) ∈ R' } for every B in R', excluding O(B)
+```
+We also need to contraint production to only produce branches towards empty directions. 
 we can assign each one of these an int value that acts as a bit flag. In this algorithm, the values are as follows:
 | Direction     | Int Value     |
 | ------------- | ------------- |
