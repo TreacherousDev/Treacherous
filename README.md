@@ -29,7 +29,7 @@ b
 This tree automaton works in the same way as described above, but with the following context-sensitive rules and constraints: 
 1. The automaton is implemented on a 2 dimensional square grid, and each node in the tree can detect the vacancy of its von neumann neighbors.
 2. A node represents a room, which must comprise of 1 or more branch directions from the set of von neumann directions.  
-We can create 15 unique rooms by combining 1 to 4 elements from the set of von neumann directions {up, right, down, left}. 
+We can create 15 unique rooms by combining 1 to 4 directions {up, right, down, left}. 
 ![mapcombos](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/243fadcb-2b51-468b-ba0d-9513f2921067)
 3. Each room shall produce 1 room for each branch, 1 tile away according to its direction. The branch connecting to its parent is excluded from production.
 4. Each room produced must consist of zero or more branches connecting to an unoccupied von neumann neighbor, plus a brach connecting to its parent.
