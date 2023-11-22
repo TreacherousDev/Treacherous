@@ -4,9 +4,9 @@ A family of cellular procedural generation algorithms powered by probabilistic, 
 
 
 # Introduction to Tree Automata
-A tree automaton is a computational model used in computer science and mathematics to process and analyze tree-like structures. 
+A tree automaton is a computational model used in computer science and mathematics to process and analyze tree-like structures.
 
-Formally, a tree automaton comprises a set of states, a transition function, and acceptance criteria. These automata traverse a tree structure in a top-down manner, moving from node to node based on the transition function and changing states accordingly. At each step, the automaton reads the current node's label and transitions between states according to the rules defined in the transition function.
+Formally, a tree automaton comprises a set of states, a transition function, and acceptance criteria. These automata traverse a tree structure in a top-down manner, moving from node to node based on the transition function and changing states accordingly. At each step, the automaton reads the current node's label and transitions to available states according to the rules defined in the transition function.
 
 Example:
 ```
@@ -28,9 +28,32 @@ A
 |
 b
 ```
-This tree automaton works in the same way.  but with additional context-sensitive restrictions. Since we want to create a working map, each produced node must have a 
+This tree automaton works in the same way. Given the von neumann directions Up, Right, Down and Left, we can create 15 unique rooms.
+![mapcombos](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/243fadcb-2b51-468b-ba0d-9513f2921067)
 
-Given the von neumann directions Up, Right, Down and Left, we can assign each one of these an int value that acts as a bit flag. In this algorithm, the values are as follows:
+Each room can produce a new set of rooms for each opening direction, and each room produced by its opening direction must have a matching opposite direction to connect to the parent room.  
+In simpler terms, if I have a room with a right branch, the rooms that the right branch produces should only be room with a matching left branch, plus other directions.
+```
+Let direction = D
+    D: {up, right, down, left}
+Let opposite = O(x)
+    O(up) = down
+    O(right) = left
+    O(down) = up
+    O(left) = right
+
+Let room = R
+    R ⊆ D
+Let branch = B
+    B ∈ R
+
+For B in R, produce R wherein:
+R ⊆ D | O(B) ∈ R
+```
+
+![roomexample](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/22dcf7a5-5b81-4a9e-a267-6244e4931a21)
+
+we can assign each one of these an int value that acts as a bit flag. In this algorithm, the values are as follows:
 | Direction     | Int Value     |
 | ------------- | ------------- |
 | UP            | 1             |
