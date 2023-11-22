@@ -1,6 +1,6 @@
 # Treacherous
 
-A family of cellular procedural generation algorithms powered by context sensitive tree automata, created by TreacherousDev.
+A family of cellular procedural generation algorithms powered by probabilistic, context-sensitive tree automata.
 
 
 # Introduction to Tree Automata
@@ -8,7 +8,27 @@ A tree automaton is a computational model used in computer science and mathemati
 
 Formally, a tree automaton comprises a set of states, a transition function, and acceptance criteria. These automata traverse a tree structure in a top-down manner, moving from node to node based on the transition function and changing states accordingly. At each step, the automaton reads the current node's label and transitions between states according to the rules defined in the transition function.
 
-In the context of procedural generation, tree automoata can be utilized to create acyclic dungeons and mazes when implemented onto a 2 dimensional grid with context-sensitive production rules based on von neumann neighborhood.
+Example:
+```
+S --> A
+A --> A | A + b | b | A + c | c
+```
+
+Sample production:
+```
+    S
+    |
+    A
+   / \
+  A   b
+ / \
+A   c
+|
+A
+|
+b
+```
+This tree automaton works in the same way.  but with additional context-sensitive restrictions. Since we want to create a working map, each produced node must have a 
 
 Given the von neumann directions Up, Right, Down and Left, we can assign each one of these an int value that acts as a bit flag. In this algorithm, the values are as follows:
 | Direction     | Int Value     |
@@ -23,7 +43,7 @@ For deomstration purposes, numbers shall be expressed in hexadecimal notation (1
 
 
 # Automata Sequence
-The algorithm starts by initializing a root room from [0, 0]. The branch direction of the room are then marked and set as children of this room.  
+The algorithm starts by initializing a root room from [0, 0]. Its branch directions are then marked and set as its children.  
 In this example, the root room is 3, which has an up (1) and right (2) direction.  
 So we set [0, 1] (up) and [1, 0] (right) as children of [0, 0] and mark them accordingly. We'll use the symbol @ to visualize marked cells.
 ```
@@ -35,8 +55,8 @@ So we set [0, 1] (up) and [1, 0] (right) as children of [0, 0] and mark them acc
 ```
 We then proceed with the folllowing sequence:
 1. For each marked cell, do as follows:
-   1.  Get all its non-empty neighbors
-   2.  Get the powerset of the combination of all non-empty neighbors (include empty)
+   1.  Get all its unoccupied neighbors
+   2.  Get the powerset of the combination of all nunoccupied neighbors (include empty)
    3.  For each set in the powerset, append the parent direction and get the sum of all elements in each set. Store the values in a list called room_selection
    5.  Select 1 random element from room_selection and set it as the new value of the current cell
    6.  Mark all the opening directions of the current cell based in its value (room ID), excluding the direction of its parent
@@ -53,7 +73,7 @@ We iterate through all marked cells starting with [0, 1]. The symbol X will be u
 -------   
 -------   
 ```
-We get all empty von neumann neighbors of X. In this case, the empty neighbors are up, right and left, as expressed with the # symbols.
+We get all unoccupied von neumann neighbors of the currently selected cell. In this case, the unoccupied neighbors are up, right and left, as expressed with the # symbols.
 ```
 -------   ---#---  
 ---X---   --#X#-- 
@@ -61,17 +81,17 @@ We get all empty von neumann neighbors of X. In this case, the empty neighbors a
 -------   -------  
 -------   -------  
 ```
-We then get the powerset of the set of all empty neighbors.
+We then get the powerset of the set of all unoccupied neighbors.
 Converted into their respective int values:
 ```
 {up, right, left}
 {1, 2, 8}
 ```
-We then calculate for P( {1, 2, 4} ), which produces:
+We calculate for its powerset P( {1, 2, 4} ) which produces:
 ```
 { {}, {1}, {2}, {8}, {1, 2}, {1, 8}, {2, 8}, {1, 2, 8} }
 ```
-We then get the parent direction of the current cell (0,1) which is 8 (parent is located down), and append it to every element in the powerset. So our updated set would be:
+We then get the parent direction of the current cell [0, 1], which is 4 as the parent is located down, and append it to every element in the powerset. So our updated set would be:
 ```
 { {4}, {1, 4}, {2, 4}, {8, 4}, {1, 2, 4}, {1, 8, 4}, {2, 8, 4, {1, 2, 8, 4} }
 ```
@@ -88,7 +108,7 @@ We then select a random element from this list and set it as the coordinate's ne
 -------
 ```
 Then, we mark all its branching directions based on its room ID (E) excluding its parent, and set those cells as its children.  
-We'll use the symbol $ to differentiate newly marked cells from the current marked cells we iterate through.
+We'll use the symbol $ to differentiate newly marked cells from the currently marked cells we iterate through.
 ```
 E: [2, 4, 8]
 parent direction: 4
@@ -112,7 +132,7 @@ We repeat the same sequence of events for (1, 0), and it should look like this:
 -------   -------   -------   -------
 ```
 After all marked cells are iterated through, we get the next batch of marked cells and iterate through them. So we'll transform all $ into @ and repeat the process till there isnt any $ left to update.  
-Example iteration:
+Example production:
 ```
 -------
 --$E$--
