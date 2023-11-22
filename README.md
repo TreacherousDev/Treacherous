@@ -25,7 +25,7 @@ A
 |
 b
 ```
-# Grammar Definition
+# Defining the Rules
 This tree automaton works in the same way as described above, but with the following context-sensitive rules and constraints: 
 1. The automaton is implemented on a 2 dimensional square grid, and each node in the tree can detect the vacancy of its von neumann neighbors.
 2. Each node stores a reference direction to its parent.
@@ -36,7 +36,7 @@ We can create 15 unique rooms by combining 1 to 4 directions {up, right, down, l
 5. Each room produced must consist of zero or more branches connecting to an unoccupied von neumann neighbor, plus a brach connecting to its parent.
 6. The automata initializes with a root room which can be any of the 15 possible rooms.
 
-
+## Formal Grammar Definition
 With this set of rules, the grammar for our automata will be as follows:
 ```
 Let direction = D
@@ -58,7 +58,8 @@ S --> { R' | R' = A + O(B) | A ⊆ N } for every B in S
 R --> { R' | R' = A + O(B) | A ⊆ N } for every B in R, excluding parent direction
 ```
 
-Example: 
+## Sample Production
+Let's take this illustration below as an example. The root room is {right}, and must transition to all its open branches (right)
 ![Screenshot (542)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/5d105a1f-b875-440a-aea0-fdbbc6bc95e3)
 ```
 Let S = {right}
@@ -68,7 +69,7 @@ O(right) = left
 
 {right} --> {left} | {right, left} | {down, left} | {right, down, left}
 ```
-If we take {left, right, down} as the production of {right}, this is what happens on the next transition:
+On this iteration , it must then transition to all its open branches, excluding its parent branch. If we take {left, right, down} as the production of {right}, this is what happens on the next transition:
 ![Screenshot (543)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9a2da299-1bcf-4d3f-822c-f194b30a66fe)
 ```
 Let R = {right, down, left}
@@ -83,7 +84,7 @@ O(down) = up
 
 {left, right, down} --> ( {left} | {right, left} ) + ( {up} | (up, down} )
 ```
-The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 3. 
+The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 3.
 
 
 # Automata Sequence
