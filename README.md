@@ -39,9 +39,9 @@ We can create 15 unique rooms by combining 1 to 4 directions {up, right, down, l
 ## Formal Grammar Definition
 With this set of rules, the grammar for our automata will be as follows:
 ```
-Let direction = D
+Let directions = D
     D: {up, right, down, left}
-Let opposite = O(x)
+Let opposite direction = O(x)
     O(up) = down
     O(right) = left
     O(down) = up
