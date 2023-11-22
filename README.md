@@ -87,7 +87,8 @@ We then select a random element from this list and set it as the coordinate's ne
 -------
 -------
 ```
-Then, we mark all its branching directions based on its room ID (E) excluding its parent, and set those cells as its children.
+Then, we mark all its branching directions based on its room ID (E) excluding its parent, and set those cells as its children.  
+We'll use the symbol $ to differentiate newly marked cells from the current marked cells we iterate through.
 ```
 E: [2, 4, 8]
 parent direction: 4
@@ -96,7 +97,7 @@ Mark directions 2 and 8
 ```
 ```
 ------- 
---@E@--
+--$E$--
 ---3@-- 
 -------
 -------
@@ -105,11 +106,42 @@ Mark directions 2 and 8
 We repeat the same sequence of events for (1, 0), and it should look like this:
 ```
 -------   -------   -------   -------
---@E@--   --@E@--   --@E@--   --@E@--
----3x--   ---3X#-   ---3C--   ---3C--
--------   ----#--   -------   ----@--
+--$E$--   --$E$--   --$E$--   --$E$--
+---3X--   ---3X#-   ---3C--   ---3C--
+-------   ----#--   -------   ----$--
 -------   -------   -------   -------
 ```
+After all marked cells are iterated through, we get the next batch of marked cells and iterate through them. So we'll transform all $ into @ and repeat the process till there isnt any $ or @ left to update. 
+Example iteration:
+```
+-------
+--$E$--
+---3C--
+----$--
+-------
+      
+-------   -------   --#----   -------   -------   ----#--   -------   ----$--   ----$--   ----$--   ----$--   ----$--
+--@E@--   --XE@--   -#XE@--   --2E@--   --2EX--   --2EX#-   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--
+---3C--   ---3C--   --#3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--
+----@--   ----@--   ----@--   ----@--   ----@--   ----@--   ----@--   ----@--   ----X--   ---#X#-   ----9--   ---$9--
+-------   -------   -------   -------   -------   -------   -------   -------   -------   ----#--   -------   -------
 
+----@--   ----X--   ---#X#-   ----C--   ---$C--   ---$C--   ---$C--   ---$C--   ---$C--
+--2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--
+---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--
+---@9--   ---@9--   ---@9--   ---@9--   ---@9--   ---X9--   --#X9--   ---A9--   --$A9--
+-------   -------   -------   -------   -------   -------   ---#---   -------   -------
 
+---@C--   ---XC--   --#XC--   ---2C--   ---2C--   ---2C--   ---2C--   ---2C--
+--2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--
+---3C--   ---3C--   ---3C--   ---3C--   ---3C--   --#3C--   ---3C--   ---3C--
+--@A9--   --@A9--   --@A9--   --@A9--   --XA9--   -#XA9--   --6A9--   --6A9--
+-------   -------   -------   -------   -------   --#----   -------   --$----
+
+---2C--   ---2C--   ---2C--   ---2C--
+--2E5--   --2E5--   --2E5--   --2E5--
+---3C--   ---3C--   ---3C--   ---3C--
+--6A9--   --6A9--   --6A9--   --6A9--
+--@----   --X----   -#X#---   --1----
+```
 
