@@ -54,10 +54,20 @@ Let unoccupied directions = N
 Let room produced = R'
     R' = { A + O(B) | A ⊆ N }
 
-S --> { R | R ⊆ N | R ≠ ∅ }
-R --> { R' | R' = A + O(B) | A ⊆ N } for every B in R', excluding O(B)
+S = { R | R ⊆ N | R ≠ ∅ }
+S --> { R' | R' = A + O(B) | A ⊆ N } for every B in R
+R --> { R' | R' = A + O(B) | A ⊆ N } for every B in R, excluding parent direction
 ```
 
+Example: 
+```
+Let S = {right}
+
+N(right) = {right, down}
+O(right) = {left}
+
+{right} --> {left} | {left, right} | {left, down} | {left, right, down}
+```
 ![Screenshot (542)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/5d105a1f-b875-440a-aea0-fdbbc6bc95e3)
 
 
