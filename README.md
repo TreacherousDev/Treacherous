@@ -25,6 +25,7 @@ A
 |
 b
 ```
+# Grammar Definition
 This tree automaton works in the same way, but with the following context-sensitive rules and constraints: 
 1. The automaton is implemented on a 2 dimensional square grid, and each node in the tree can detect the vacancy of its von neumann neighbors.
 2. A node represents a room, which must comprise of 1 or more branch directions from the set of von neumann directions.  
@@ -34,7 +35,7 @@ We can create 15 unique rooms by combining 1 to 4 elements from the set of von n
 4. Each room produced must consist of zero or more branches connecting to an unoccupied von neumann neighbor, plus a brach connecting to its parent.
 
 
-The grammar for our automata will be as follows:
+The grammar for our automata is as follows:
 ```
 Let direction = D
     D: {up, right, down, left}
@@ -80,7 +81,7 @@ O(down) = up
 
 {left, right, down} --> ( {left} | {right, left} ) + ( {up} | (up, down} )
 ```
-The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches.
+The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 3. 
 
 
 # Automata Sequence
@@ -117,8 +118,7 @@ We then proceed with the folllowing sequence:
    2.  Get the powerset of the combination of all nunoccupied neighbors (include empty)
    3.  For each set in the powerset, append the parent direction and get the sum of all elements in each set. Store the values in a list called room_selection
    5.  Select 1 random element from room_selection and set it as the new value of the current cell
-   6.  Mark all the opening directions of the current cell based in its value (room ID), excluding the direction of its parent
-   7.  For each marked direction, set it as a child of the current cell.
+   6.  Based on its value (room ID), mark all the opening directions and set them as children, excluding the direction of its parent.
 2. Get the next batch of marked cells and repeat.
 
 Let's run through this algorithm step by step and simulate the map in real time.
