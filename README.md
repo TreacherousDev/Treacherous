@@ -23,9 +23,9 @@ For deomstration purposes, numbers shall be expressed in hexadecimal notation (1
 
 
 # Automata Sequence
-The algorithm starts by initializing a root room from (0, 0). The branch direction of the cell are marked and set as children of the origin.
-In this example, the root room is 3, which has an up (1) and right (2) direction.
-So we set (0, 1) and (1,0) as children of (0,0).
+The algorithm starts by initializing a root room from [0, 0]. The branch direction of the room are then marked and set as children of this room.  
+In this example, the root room is 3, which has an up (1) and right (2) direction.  
+So we set [0, 1] (up) and [1, 0] (right) as children of [0, 0] and mark them accordingly. We'll use the symbol @ to visualize marked cells.
 ```
 -------   -------
 -------   ---@---
@@ -34,21 +34,18 @@ So we set (0, 1) and (1,0) as children of (0,0).
 -------   -------
 ```
 We then proceed with the folllowing sequence:
-1. Get all children of the current cell.
-2. For each child, do as follows:
-   1.  Get all non-empty neighbors
+1. For each marked cell, do as follows:
+   1.  Get all its non-empty neighbors
    2.  Get the powerset of the combination of all non-empty neighbors (include empty)
    3.  For each set in the powerset, append the parent direction and get the sum of all elements in each set. Store the values in a list called room_selection
    5.  Select 1 random element from room_selection and set it as the new value of the current cell
-   6.  Mark all the opening directions of the current cell, excluding the direction of its parent
+   6.  Mark all the opening directions of the current cell based in its value (room ID), excluding the direction of its parent
    7.  For each marked direction, set it as a child of the current cell.
-3. If there exists at least 1 element in next_active_cells:
-   1.  Move the contents of next_active_cells to active_cells
-   2.  Run the algorithm again.
+2. Get the next batch of marked directions and repeat.
 
 Let's run through this algorithm step by step and simulate the map in real time.
-In the example earlier, the root room has two children: (0,1) and (1,0)
-We iterate through all children starting with (0, 1). In the diagram below, X will be used to show the currently selected child.
+In the example earlier, there are 2 marked cells: [0, 1] and [1, 0]
+We iterate through all marked cells starting with [0, 1]. The symbol X will be used to show the currently selected child.
 ```
 -------     
 ---X---  
@@ -56,7 +53,7 @@ We iterate through all children starting with (0, 1). In the diagram below, X wi
 -------   
 -------   
 ```
-We get all empty von neumann neighbors of X. In this case, the empty neighbors are up, right and left.
+We get all empty von neumann neighbors of X. In this case, the empty neighbors are up, right and left, as expressed with the # symbols.
 ```
 -------   ---#---  
 ---X---   --#X#-- 
@@ -82,7 +79,7 @@ Lastly, we take the sum of the elements of each sub element to get the room IDs,
 ```
 {4, 5, 6, 7, C, D, E, F}
 ```
-We then select a random element from this list and set it as the coordinate's room ID. 
+We then select a random element from this list and set it as the coordinate's new value (room ID). 
 ```
 ------- 
 ---E---
@@ -90,7 +87,13 @@ We then select a random element from this list and set it as the coordinate's ro
 -------
 -------
 ```
-Then, we mark all branching directions of the cell based on its ID (E) excluding its parent, and set those cells as its children.
+Then, we mark all its branching directions based on its room ID (E) excluding its parent, and set those cells as its children.
+```
+E: [2, 4, 8]
+parent direction: 4
+[2, 4, 8] - 4 = [2, 8]
+Mark directions 2 and 8
+```
 ```
 ------- 
 --@E@--
@@ -107,19 +110,6 @@ We repeat the same sequence of events for (1, 0), and it should look like this:
 -------   ----#--   -------   ----@--
 -------   -------   -------   -------
 ```
-<!---
-We configure its cell data like this:
-```
-cell_data[root_room][0, null, null, [1, 2, 4, 8]]
-```
-The indexes for the cell data are as follows:
-| Index | Label             | Description                                                                                                  |
-| ----- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
-| 0     | Depth             | How many rooms to traverse before reaching the root room                                                     |
-| 1     | Parent Direction  | The direction of the parent relative to the current cell, expressed as a bit flag int                        |
-| 2     | Parent Position   | The position of the parent cell, expressed as a Vector2i.                                                    |
-| 3     | Open Directions   | An array of all the unoccupied von neumann neighbors of the cell, each direction expressed as a bit flag int |
----> 
-will continue later.
+
 
 
