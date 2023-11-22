@@ -69,7 +69,7 @@ O(right) = left
 
 {right} --> {left} | {right, left} | {down, left} | {right, down, left}
 ```
-On the next iteration, it must then transition to all its open branches, excluding its parent branch. Here, we take {left, right, down} as the production of {right}, and we must then transition to the directions right and down.
+On the next iteration, it must then transition to all its open branches, excluding the branch connecting to its parent. Here, we take {left, right, down} as the production of {right}, and we must then transition to the directions right and down.
 ![Screenshot (543)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9a2da299-1bcf-4d3f-822c-f194b30a66fe)
 ```
 Let R = {right, down, left}
@@ -84,7 +84,7 @@ O(down) = up
 
 {left, right, down} --> ( {left} | {right, left} ) + ( {up} | (up, down} )
 ```
-The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 3.
+The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 4.
 
 
 # Automata Sequence
