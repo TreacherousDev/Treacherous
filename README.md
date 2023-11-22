@@ -41,11 +41,11 @@ We then proceed with the folllowing sequence:
    5.  Select 1 random element from room_selection and set it as the new value of the current cell
    6.  Mark all the opening directions of the current cell based in its value (room ID), excluding the direction of its parent
    7.  For each marked direction, set it as a child of the current cell.
-2. Get the next batch of marked directions and repeat.
+2. Get the next batch of marked cells and repeat.
 
 Let's run through this algorithm step by step and simulate the map in real time.
 In the example earlier, there are 2 marked cells: [0, 1] and [1, 0]
-We iterate through all marked cells starting with [0, 1]. The symbol X will be used to show the currently selected child.
+We iterate through all marked cells starting with [0, 1]. The symbol X will be used to show the currently selected cell.
 ```
 -------     
 ---X---  
@@ -111,7 +111,7 @@ We repeat the same sequence of events for (1, 0), and it should look like this:
 -------   ----#--   -------   ----$--
 -------   -------   -------   -------
 ```
-After all marked cells are iterated through, we get the next batch of marked cells and iterate through them. So we'll transform all $ into @ and repeat the process till there isnt any $ or @ left to update. 
+After all marked cells are iterated through, we get the next batch of marked cells and iterate through them. So we'll transform all $ into @ and repeat the process till there isnt any $ left to update.  
 Example iteration:
 ```
 -------
@@ -121,27 +121,29 @@ Example iteration:
 -------
       
 -------   -------   --#----   -------   -------   ----#--   -------   ----$--   ----$--   ----$--   ----$--   ----$--
---@E@--   --XE@--   -#XE@--   --2E@--   --2EX--   --2EX#-   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--
+--@E@--   --XE@--   -#XE@--   --2E@--   --2EX--   --2EX#-   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--
 ---3C--   ---3C--   --#3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--
 ----@--   ----@--   ----@--   ----@--   ----@--   ----@--   ----@--   ----@--   ----X--   ---#X#-   ----9--   ---$9--
 -------   -------   -------   -------   -------   -------   -------   -------   -------   ----#--   -------   -------
 
 ----@--   ----X--   ---#X#-   ----C--   ---$C--   ---$C--   ---$C--   ---$C--   ---$C--
---2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--
+--2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--
 ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--
 ---@9--   ---@9--   ---@9--   ---@9--   ---@9--   ---X9--   --#X9--   ---A9--   --$A9--
 -------   -------   -------   -------   -------   -------   ---#---   -------   -------
 
 ---@C--   ---XC--   --#XC--   ---2C--   ---2C--   ---2C--   ---2C--   ---2C--
---2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--   --2E5--
+--2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--
 ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   --#3C--   ---3C--   ---3C--
 --@A9--   --@A9--   --@A9--   --@A9--   --XA9--   -#XA9--   --6A9--   --6A9--
 -------   -------   -------   -------   -------   --#----   -------   --$----
 
 ---2C--   ---2C--   ---2C--   ---2C--
---2E5--   --2E5--   --2E5--   --2E5--
+--2E9--   --2E9--   --2E9--   --2E9--
 ---3C--   ---3C--   ---3C--   ---3C--
 --6A9--   --6A9--   --6A9--   --6A9--
 --@----   --X----   -#X#---   --1----
 ```
+If we map each number to their respective room value, it should look like this:
 
+![map](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9c00c436-1a28-4e9c-86d3-0e3ae5c57dce)
