@@ -25,10 +25,10 @@ A
 |
 b
 ```
-The example above  is what can be described as a context-free tree automata. Transition functions are based solely on the current state of the automaton and the label of the current node being processed in the tree. These transitions are context-free in nature and do not consider the larger context or surrounding nodes.
+The example above  is what can be described as a context-free tree automaton. The transition functions are based solely on the current state of the automaton and the label of the current node being processed in the tree. These transitions are context-free in nature and do not consider the larger context or surrounding nodes.
 
 In context sensitive tree automata meanwhile, transitions are based not only on the current node's label but also on the context or surrounding nodes. The rules governing transitions in context sensitive automata take into account a broader context, allowing for more sophisticated language recognition.   
-This procedural generator is exactly that. Production of rooms are implemented on a 2 dimensional grid, and is context-sensitive to its surrounding neighbors, in such that a node must only produce a room that branches towards valid (unoccupied) cells.
+This procedural generator is exactly that. Production of rooms are implemented on a 2 dimensional grid, and is context-sensitive to its surrounding von neumann neighbors, in such that a node must only produce a room that branches towards valid (unoccupied) cells.
 
 In the diagram below, X has an unobstructed path to all its von neumann neighbors.  As such, it can produce new nodes on all 4 directions
 ```
@@ -49,7 +49,7 @@ In this next diagram however, the left and right neighbors are obstructed, so it
 
 # Defining the Rules
 This tree automaton can be defined by the following rules and constraints: 
-1. The automaton is implemented on a 2 dimensional grid, and each node in the tree can detect the vacancy of its von neumann neighbors.
+1. The automaton is implemented on a 2 dimensional grid. Each node in the tree occupies one cell, and can detect the state of its von neumann neighbors.
 2. Each node stores a reference direction to its parent.
 3. A node represents a room, which must comprise of 1 or more branch directions from the set of all cardinal directions (up, right, down, left).  
 We can create 15 unique rooms by combining 1 to 4 directions like so:.  
@@ -89,7 +89,7 @@ Let S = {right}
 N(right) = {right, down}
 O(right) = left
 
-{right} --> {left} | {right, left} | {down, left} | {right, down, left}
+{right} --> ( {left} | {right, left} | {down, left} | {right, down, left} ) at position right from S
 ```
 Here, we take {right, down, left} as the production of {right}, so we produce the selected room at its right neighbor. Then, we get the selected room's directions and transition to all non-parent directions. In this case, the non-parent directions are up and down.
 ![Screenshot (543)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9a2da299-1bcf-4d3f-822c-f194b30a66fe)
@@ -104,14 +104,14 @@ O(right) = left
 N(down) = {down}
 O(down) = up
 
-{left, right, down} --> ( {left} | {right, left} ) + ( {up} | (up, down} )
+{left, right, down} --> ( {left} | {right, left} ) at position right from R    +    ( {up} | (up, down} ) at position down from R
 ```
 The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 4.
 
 
 # Automata Sequence
 ## Design Architecture
-To avoid collision conflict, it is crucial thar the tree automaton produces new rooms in a single thread. That is, there must only be one active room transitioning at any given time, and transition calculation and execution must be done completely before selecting another room to activate.
+To avoid collision conflict, it is crucial that room production is done one a single thread. That is, there must only be one active room transitioning at any given time, and transition calculation and execution must be done completely before selecting another room to activate.
 To ensure a fair growth pattern, producton of new rooms must be done in a breadth first manner. That is, we select active rooms by batch, and we set the newly produced rooms from the current batch as the next batch. We only move to the next batch after we are done iterating through all rooms in the current batch.
 
 ## Syntax Implementation
@@ -123,8 +123,8 @@ We can assign each primary direction an int value that acts as a bit flag. In th
 | DOWN          | 4             |
 | LEFT          | 8             |
 
-With the assigned values, we can map each room to their unique room number by getting the sum of their directions.
-For deomstration purposes, numbers shall be expressed in hexadecimal notation (1 - F) so that each number occupies only 1 character to make diagrams look more uniform.  
+With these assigned values, we can map each room to their unique room number by getting the sum of their directions.
+For demonstration purposes, numbers shall be expressed in hexadecimal notation (1 - F) so that each number occupies only 1 character to make diagrams look more uniform.  
 ![tileset](https://github.com/TreacherousDev/Treacherous/assets/55629534/8d6f0203-dd5b-4180-b6b6-af52358b6e81)
 
 ## Sequence
@@ -141,15 +141,14 @@ So we set the cell above it and the cell to its right as its children, and mark 
 We then proceed with the folllowing sequence:
 1. For each marked cell, do as follows:
    1.  Get all its unoccupied neighbors
-   2.  Get the powerset of the combination of all nunoccupied neighbors (include empty)
+   2.  Get the powerset of the combination of all unoccupied neighbors (include empty)
    3.  For each set in the powerset, append the parent direction and get the sum of all elements in each set. Store the values in a list called room_selection
    5.  Select 1 random element from room_selection and set it as the new value of the current cell
    6.  Based on its value (room ID), mark all the opening directions and set them as children, excluding the direction of its parent.
 2. Get the next batch of marked cells and repeat.
 
-Let's run through this algorithm step by step and simulate the map in real time.
-In the example earlier, there are 2 marked cells.
-We iterate through all marked cells starting with the top one. The symbol X will be used to show the currently selected cell.
+Let's run through this algorithm step by step and simulate the map in real time.  
+In the example earlier, there are 2 marked cells. We iterate through all marked cells starting with the top one. The symbol X will be used to show the currently selected cell.
 ```
 -------     
 ---X---  
@@ -157,7 +156,8 @@ We iterate through all marked cells starting with the top one. The symbol X will
 -------   
 -------   
 ```
-We get all unoccupied von neumann neighbors of the currently selected cell. In this case, the unoccupied neighbors are up, right and left, as expressed with the # symbols.
+We get all unoccupied von neumann neighbors of the currently selected cell.   
+In this case, the unoccupied neighbors are up, right and left, as expressed with the # symbols.
 ```
 -------   ---#---  
 ---X---   --#X#-- 
@@ -165,7 +165,7 @@ We get all unoccupied von neumann neighbors of the currently selected cell. In t
 -------   -------  
 -------   -------  
 ```
-We then get the powerset of the set of all unoccupied neighbors.
+We then get the powerset of the set of all unoccupied neighbors.  
 Converted into their respective int values:
 ```
 {up, right, left}
@@ -179,7 +179,7 @@ We then get the parent direction of the current cell (which is 4 as the parent i
 ```
 { {4}, {1, 4}, {2, 4}, {8, 4}, {1, 2, 4}, {1, 8, 4}, {2, 8, 4, {1, 2, 8, 4} }
 ```
-Lastly, we take the sum of the elements of each sub element to get the room IDs, which will now be our room selection.
+Lastly, we take the sum of the elements of each sub-element to get the room IDs, which will now be our room selection.
 ```
 {4, 5, 6, 7, C, D, E, F}
 ```
@@ -192,13 +192,13 @@ We then select a random element from this list and set it as the coordinate's ne
 -------
 ```
 Then, we mark all its branching directions according to its room ID (E) excluding its parent direction, and set those cells as its children.  
-We'll use the symbol $ to differentiate newly marked cells from the currently marked cells we iterate through.
 ```
 E: [2, 4, 8]
 parent direction: 4
 [2, 4, 8] - 4 = [2, 8]
-Mark directions 2 and 8
+Mark directions 2 and 8 and set as children
 ```
+We'll use the symbol $ to differentiate newly marked cells from the currently marked cells we iterate through.
 ```
 ------- 
 --$E$--
@@ -215,6 +215,8 @@ We repeat the same sequence of events for the right cell, and it should look lik
 -------   ----#--   -------   ----$--
 -------   -------   -------   -------
 ```
+Notice how X now detects up as an occupied direction, because it was previously updated by the cell that came before it. This avoids collision conflict that would have otherwise resulted if both of them were to detect directions at the same time.
+
 After all marked cells are iterated through, we get the next batch of marked cells and iterate through them. So we'll transform all $ into @ and repeat the process till there isnt any $ left to update.  
 Sample production:
 ```
