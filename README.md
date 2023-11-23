@@ -25,14 +25,36 @@ A
 |
 b
 ```
+The example above  is what can be described as a context-free tree automata. Transition functions are based solely on the current state of the automaton and the label of the current node being processed in the tree. These transitions are context-free in nature and do not consider the larger context or surrounding nodes.
+
+In context sensitive tree automata meanwhile, transitions are based not only on the current node's label but also on the context or surrounding nodes. The rules governing transitions in context sensitive automata take into account a broader context, allowing for more sophisticated language recognition.   
+This procedural generator is exactly that. Production of rooms are implemented on a 2 dimensional grid, and is context-sensitive to its surrounding neighbors, in such that a node must only produce a room that branches towards valid (unoccupied) cells.
+
+In the diagram below, X has an unobstructed path to all its von neumann neighbors.  As such, it can produce new nodes on all 4 directions
+```
+-------
+-------
+---X---
+-------
+-------
+```
+In this next diagram however, the left and right neighbors are obstructed, so it can only produce new nodes above and below.
+```
+-------
+-------
+--OXO--
+-------
+-------
+```
+
 # Defining the Rules
-This tree automaton works in the same way as described above, but with the following context-sensitive rules and constraints: 
-1. The automaton is implemented on a 2 dimensional square grid, and each node in the tree can detect the vacancy of its von neumann neighbors.
+This tree automaton can be defined by the following rules and constraints: 
+1. The automaton is implemented on a 2 dimensional grid, and each node in the tree can detect the vacancy of its von neumann neighbors.
 2. Each node stores a reference direction to its parent.
-3. A node represents a room, which must comprise of 1 or more branch directions from the set of von neumann directions.  
-We can create 15 unique rooms by combining 1 to 4 directions {up, right, down, left}.  
+3. A node represents a room, which must comprise of 1 or more branch directions from the set of all cardinal directions (up, right, down, left).  
+We can create 15 unique rooms by combining 1 to 4 directions like so:.  
 ![mapcombos](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/243fadcb-2b51-468b-ba0d-9513f2921067)
-4. Each room shall produce 1 room for each branch, 1 tile away according to its direction. The branch connecting to its parent is excluded from production.
+4. Each room shall produce 1 room for each branch, 1 tile away towards its respective direction. The branch connecting to its parent is excluded from this rule.
 5. Each room produced must consist of zero or more branches connecting to an unoccupied von neumann neighbor, plus a brach connecting to its parent.
 6. The automata initializes with a root room which must contain 1 or more branches connecting to an unoccupied von neumann neighbor.
 
@@ -54,12 +76,12 @@ Let room produced = R'
     R' = { A + O(B) | A ⊆ N }
 
 S = { R | R ⊆ N | R ≠ ∅ }
-S --> { R' | R' = A + O(B) | A ⊆ N } for every B in S
-R --> { R' | R' = A + O(B) | A ⊆ N } for every B in R, excluding parent direction
+S --> { R' | R' = A + O(B) | A ⊆ N } at location B from S, for every B in S
+R --> { R' | R' = A + O(B) | A ⊆ N } at location B from R, for every B in R, excluding parent direction
 ```
 
 ## Sample Production
-Let's take this illustration below as an example. The root room is {right}, and must transition to all its open branches (right)
+Let's take this illustration below as an example. The root room is {right}, and must transition to all its open branches. Since it has a right branch, it must spawn a valid room to its right neighbor.
 ![Screenshot (542)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/5d105a1f-b875-440a-aea0-fdbbc6bc95e3)
 ```
 Let S = {right}
@@ -69,7 +91,7 @@ O(right) = left
 
 {right} --> {left} | {right, left} | {down, left} | {right, down, left}
 ```
-On the next iteration, it must then transition to all its open branches, excluding the branch connecting to its parent. Here, we take {left, right, down} as the production of {right}, and we must then transition to the directions right and down.
+Here, we take {right, down, left} as the production of {right}, so we produce the selected room at its right neighbor. Then, we get the selected room's directions and transition to all non-parent directions. In this case, the non-parent directions are up and down.
 ![Screenshot (543)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9a2da299-1bcf-4d3f-822c-f194b30a66fe)
 ```
 Let R = {right, down, left}
