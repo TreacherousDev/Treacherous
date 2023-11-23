@@ -91,7 +91,7 @@ O(right) = left
 
 {right} --> ( {left} | {right, left} | {down, left} | {right, down, left} ) at position right from S
 ```
-Here, we take {right, down, left} as the production of {right}, so we produce the selected room at its right neighbor. Then, we get the selected room's directions and transition to all non-parent directions. In this case, the non-parent directions are up and down.
+Here, we take {right, down, left} as the production of {right}, so we produce the selected room at its right neighbor. Then, we get the selected room's directions and transition to all non-parent directions. In this case, we shall produce a valid room to its right neighbor and another to its down neighbor..
 ![Screenshot (543)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9a2da299-1bcf-4d3f-822c-f194b30a66fe)
 ```
 Let R = {right, down, left}
