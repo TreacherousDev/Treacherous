@@ -54,7 +54,7 @@ This tree automaton can be defined by the following rules and constraints:
 3. A node represents a room, which must comprise of 1 or more branch directions from the set of all cardinal directions (up, right, down, left).  
 We can create 15 unique rooms by combining 1 to 4 directions like so:.  
 ![mapcombos](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/243fadcb-2b51-468b-ba0d-9513f2921067)
-4. Each room shall produce 1 room for each branch, 1 tile away towards its respective direction. The branch connecting to its parent is excluded from this rule.
+4. Each room shall produce 1 room for each branch, 1 cell away towards its respective direction. The branch connecting to its parent is excluded from this rule.
 5. Each room produced must consist of zero or more branches connecting to an unoccupied von neumann neighbor, plus a brach connecting to its parent.
 6. The automata initializes with a root room which must contain 1 or more branches connecting to an unoccupied von neumann neighbor.
 
