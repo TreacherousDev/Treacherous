@@ -38,7 +38,7 @@ The example above  is what can be described as a context-free tree automaton. Th
 In context sensitive tree automata meanwhile, transitions are based not only on the current node's label but also on the context or surrounding nodes. The rules governing transitions in context sensitive automata take into account a broader context, allowing for more sophisticated language recognition.   
 This procedural generator is exactly that. Production of rooms are implemented on a 2 dimensional grid, and is context-sensitive to its surrounding von neumann neighbors, in such that a node must only produce a room that branches towards valid (unoccupied) cells.
 
-In the diagram below, X has an unobstructed path to all its von neumann neighbors.  As such, it can produce new nodes on all 4 directions
+In the diagram below, X has an unobstructed path to all its von neumann neighbors.  As such, it can produce a new node on all 4 directions
 ```
 -------
 -------
@@ -46,7 +46,7 @@ In the diagram below, X has an unobstructed path to all its von neumann neighbor
 -------
 -------
 ```
-In this next diagram however, the left and right neighbors are obstructed, so it can only produce new nodes above and below.
+In this next diagram however, the left and right neighbors are obstructed, so it can only produce a new node above and below.
 ```
 -------
 -------
@@ -97,7 +97,7 @@ Let S = {right}
 N(right) = {right, down}
 O(right) = left
 
-{right} --> ( {left} | {right, left} | {down, left} | {right, down, left} ) at position right from S
+{right} --> ( {left} | {right, left} | {down, left} | {right, down, left} ) at location right from S
 ```
 Here, we take {right, down, left} as the production of {right}, so we produce the selected room at its right neighbor. Then, we get the selected room's directions and transition to all non-parent directions. In this case, we shall produce a valid room to its right neighbor and another to its down neighbor..
 ![Screenshot (543)](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9a2da299-1bcf-4d3f-822c-f194b30a66fe)
@@ -112,9 +112,9 @@ O(right) = left
 N(down) = {down}
 O(down) = up
 
-{left, right, down} --> ( {left} | {right, left} ) at position right from R    +    ( {up} | (up, down} ) at position down from R
+{left, right, down} --> ( {left} | {right, left} ) at position right from R    +    ( {up} | (up, down} ) at location down from R
 ```
-The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 4.
+The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R' produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 4.
 
 
 # Automata Sequence
