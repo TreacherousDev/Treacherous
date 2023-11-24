@@ -36,7 +36,7 @@ b
 The example above  is what can be described as a context-free tree automaton. The transition functions are based solely on the current state of the automaton and the label of the current node being processed in the tree. These transitions are context-free in nature and do not consider the larger context or surrounding nodes.
 
 In context sensitive tree automata meanwhile, transitions are based not only on the current node's label but also on the context or surrounding nodes. The rules governing transitions in context sensitive automata take into account a broader context, allowing for more sophisticated language recognition.   
-This procedural generator is exactly that. Production of rooms are implemented on a 2 dimensional grid, and is context-sensitive to its surrounding von neumann neighbors, in such that a node must only produce a room that branches towards valid (unoccupied) cells.
+This procedural generator is exactly that. Production of rooms are implemented on a 2 dimensional grid, and is context-sensitive to its surrounding von neumann neighbors, in such that a node must only branch towards valid (unoccupied) cells.
 
 In the diagram below, X has an unobstructed path to all its von neumann neighbors.  As such, it can produce a new node on all 4 directions
 ```
