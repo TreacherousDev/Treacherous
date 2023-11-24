@@ -9,18 +9,21 @@ A family of cellular procedural generation algorithms powered by probabilistic, 
 ![Caverns](https://github.com/TreacherousDev/Treacherous/assets/55629534/b4d8eb0e-657a-43f3-bf0d-1ec7715559fd)
 
 ### C. Mazes
-![Mazes](https://github.com/TreacherousDev/Treacherous/assets/55629534/88412c5c-5fa8-44dc-b980-4671e4fa04e8)
+![Mazes](https://github.com/TreacherousDev/Treacherous/assets/55629534/56503eb5-d377-4c94-8c44-ef030b323fb4)
+
 
 # Introduction to Tree Automata
 A tree automaton is a computational model used in computer science and mathematics to process and analyze tree-like structures.
 
 Formally, a tree automaton comprises a set of states, a transition function, and acceptance criteria. These automata traverse a tree structure in a top-down manner, moving from node to node based on the transition function and changing states accordingly. At each step, the automaton reads the current node's label and transitions to available states according to the rules defined in the transition function.
 
-Example:
+Consider the language below:
 ```
 S --> A
 A --> A | A + b | b | A + c | c
-
+```
+With this set of rules, a sample production would look like this:
+```
     S
     |
     A
