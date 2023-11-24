@@ -112,7 +112,7 @@ O(right) = left
 N(down) = {down}
 O(down) = up
 
-{left, right, down} --> ( {left} | {right, left} ) at position right from R    +    ( {up} | (up, down} ) at location down from R
+{left, right, down} --> ( {left} | {right, left} ) at location right from R    +    ( {up} | (up, down} ) at location down from R
 ```
 The automaton will continue transitioning unitll there are no more transitions left to occur. An end state is determined if a room R' produced is one of 4 primary directions {up, right, down, left}, as it means that it has only a branch to its parent and cannot produce more branches, according to rule 4.
 
