@@ -68,10 +68,13 @@ const CHILDREN = 4
 
 
 func _ready():
+	await get_tree().create_timer(0.6).timeout
 	randomize()
 	rng.set_seed(randi())
 	print(rng.seed)
-	start()
+	await start()
+	await get_tree().create_timer(1.5).timeout
+	get_tree().reload_current_scene()
 
 # Enter: Reload Map
 # Esc: Quit Game
@@ -86,6 +89,7 @@ func _process(_delta):
 func draw_edge():
 	pass
 
+@export var start_id: int = 15
 var expansion_requests: int = 0
 ################
 # START METHOD #
@@ -93,7 +97,6 @@ var expansion_requests: int = 0
 ## Initialzes the algorithm from the origin
 func start():
 	var start_from = Vector2i.ZERO
-	var start_id = 4
 	set_cell(0, start_from, 0, Vector2i(start_id, 0))
 	cell_data[start_from] = [0, null, null, [], []]
 	current_map_size += 1
@@ -102,7 +105,7 @@ func start():
 	while (next_active_cells.size() != 0):
 		iterations += 1
 		if iterations % batch_size == 0:
-			await get_tree().process_frame
+#			await get_tree().create_timer(0.2).timeout
 			await get_tree().process_frame
 		
 		run_algorithm()

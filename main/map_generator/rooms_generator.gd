@@ -106,8 +106,8 @@ func animate_path(path: Array):
 	path.clear()
 
 
-#MANIPULATE MAP
-#all methods to manipulate map structure goes here
+# MANIPULATE ROOM SELECTION
+# all methods to manipulate rooom selection goes here
 func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
 	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
@@ -115,30 +115,18 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 		force_spawn_room(parent_direction, room_selection)
 	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
 		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
+	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
+		delete_rooms_from_pool([15], room_selection)
 	
 ####################################################################
 # EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
-
-	if cell.x <= 0:
-		delete_rooms_from_pool([8, 9, 10, 11, 12, 13, 14, 15], room_selection)
-		cell_data[cell][OPEN_DIRECTIONS].erase(8)
-	if cell.y <= 0:
-		delete_rooms_from_pool([1, 3, 5, 7, 9, 11, 13, 15], room_selection)
-		cell_data[cell][OPEN_DIRECTIONS].erase(1)
-	if cell.x >= 149:
-		delete_rooms_from_pool([2, 3, 6, 7, 10, 11, 14, 15], room_selection)
-		cell_data[cell][OPEN_DIRECTIONS].erase(2)
-	if cell.y >= 79:
-		delete_rooms_from_pool([4, 5, 6, 7, 12, 13, 14, 15], room_selection)
-		cell_data[cell][OPEN_DIRECTIONS].erase(4)
-
-	if cell_data[cell][OPEN_DIRECTIONS].is_empty():
-		delete_from_expandable_rooms(cell)
-
-	delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
-#	if rooms_expected_next_iteration <= 1:
-#		delete_rooms_from_pool([parent_direction], room_selection)
-
+	
+	# sample 1: prevents the map from branching more than 10 branching paths per iteration
+	if rooms_expected_next_iteration > 7:
+		force_spawn_room(parent_direction, room_selection)
+		# sample 1: prevents the map from branching more than 10 branching paths per iteration
+	if rooms_expected_next_iteration < 2:
+		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################

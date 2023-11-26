@@ -25,10 +25,10 @@ func smoothen_border():
 			fill_next.append(cell)
 	
 	for cell in fill_next:
-		if chunk % 10000 == 0:
+		if chunk % 30 == 0:
 			await get_tree().process_frame
 		chunk += 1
-		set_cell(0, cell, 0, Vector2i(0, 0))
+		set_cell(0, cell, 0, Vector2i(16, 0))
 		
 	if border_cells_to_fill.size() != 0:
 		border_cells_to_fill = get_next_border_cells_to_fill(fill_next)
@@ -66,3 +66,30 @@ func get_next_border_cells_to_fill(recently_filled_cells) -> Array:
 				if !result.has(neighbor):
 					result.append(neighbor)
 	return result
+
+
+
+# MANIPULATE ROOM SELECTION
+# all methods to manipulate rooom selection goes here
+func manipulate_room_selection(cell: Vector2i, room_selection: Array):
+	# DEFAULT: Closes the map if the map size is already achieved
+	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
+	if current_map_size + rooms_expected_next_iteration >= map_size:
+		force_spawn_room(parent_direction, room_selection)
+	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
+		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
+	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
+		delete_rooms_from_pool([15], room_selection)
+	
+####################################################################
+# EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
+# USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
+####################################################################
+	
+	# sample 1: prevents the map from branching more than 10 branching paths per iteration
+	if rooms_expected_next_iteration > 12:
+		force_spawn_room(parent_direction, room_selection)
+		# sample 1: prevents the map from branching more than 10 branching paths per iteration
+	if rooms_expected_next_iteration < 4:
+		delete_rooms_from_pool([parent_direction], room_selection)
+################################################################################################
