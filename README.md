@@ -24,9 +24,9 @@ A --> A | A + b | b | A + c | c
 ```
 With this set of rules, a sample production would look like this:
 ```
-	S
-	|
-	A
+    S
+    |
+    A
    / \
   A   b
  / \
