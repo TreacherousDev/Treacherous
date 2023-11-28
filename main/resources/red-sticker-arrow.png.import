@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dkamn0fxapn38"
-path="res://.godot/imported/maze_tilemaps-spritesheet.png-931076aa332822d8e861fc22903eb607.ctex"
+uid="uid://cqdnt6pexx27k"
+path="res://.godot/imported/red-sticker-arrow.png-59c9385137ad9dc466a6935ef5a7292a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://maze_tilemaps-spritesheet.png"
-dest_files=["res://.godot/imported/maze_tilemaps-spritesheet.png-931076aa332822d8e861fc22903eb607.ctex"]
+source_file="res://main/resources/red-sticker-arrow.png"
+dest_files=["res://.godot/imported/red-sticker-arrow.png-59c9385137ad9dc466a6935ef5a7292a.ctex"]
 
 [params]
 

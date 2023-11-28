@@ -24,9 +24,9 @@ A --> A | A + b | b | A + c | c
 ```
 With this set of rules, a sample production would look like this:
 ```
-    S
-    |
-    A
+	S
+	|
+	A
    / \
   A   b
  / \
@@ -73,18 +73,18 @@ We can create 15 unique rooms by combining 1 to 4 directions like so:.
 With this set of rules, the grammar for our automata will be as follows:
 ```
 Let directions = D
-    D: {up, right, down, left}
+	D: {up, right, down, left}
 Let opposite direction = O(x)
-    O(up) = down
-    O(right) = left
-    O(down) = up
-    O(left) = right
+	O(up) = down
+	O(right) = left
+	O(down) = up
+	O(left) = right
 Let branch = B
-    B ∈ D
+	B ∈ D
 Let unoccupied directions = N
-    N ⊆ D | B in N = unoccupied, for every B in N
+	N ⊆ D | B in N = unoccupied, for every B in N
 Let room produced = R'
-    R' = { A + O(B) | A ⊆ N }
+	R' = { A + O(B) | A ⊆ N }
 
 S = { R | R ⊆ N | R ≠ ∅ }
 S --> { R' | R' = A + O(B) | A ⊆ N } at location B from S, for every B in S
@@ -236,7 +236,7 @@ Sample production:
 ---3C--
 ----$--
 -------
-      
+	  
 -------   -------   --#----   -------   -------   ----#--   -------   ----$--   ----$--   ----$--   ----$--   ----$--   
 --@E@--   --XE@--   -#XE@--   --2E@--   --2EX--   --2EX#-   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   --2E9--   
 ---3C--   ---3C--   --#3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   ---3C--   

@@ -1,9 +1,9 @@
-[gd_resource type="TileSet" load_steps=3 format=3 uid="uid://d2unss866yoe8"]
+[gd_resource type="TileSet" load_steps=3 format=3 uid="uid://b0xvjp60its20"]
 
-[ext_resource type="Texture2D" uid="uid://dkamn0fxapn38" path="res://maze_tilemaps-spritesheet.png" id="1_pjwyy"]
+[ext_resource type="Texture2D" uid="uid://dkamn0fxapn38" path="res://main/resources/maze_tilemaps-spritesheet.png" id="1_0jrif"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ca71t"]
-texture = ExtResource("1_pjwyy")
+texture = ExtResource("1_0jrif")
 texture_region_size = Vector2i(60, 60)
 0:0/0 = 0
 1:0/0 = 0
