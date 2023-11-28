@@ -188,7 +188,7 @@ We calculate for its powerset P( {1, 2, 8} ) which produces:
 ```
 We then get the parent direction of the current cell (which is 4 as the parent is located down), and append it to every element in the powerset. So our updated set would be:
 ```
-{ {4}, {1, 4}, {2, 4}, {8, 4}, {1, 2, 4}, {1, 8, 4}, {2, 8, 4, {1, 2, 8, 4} }
+{ {4}, {1, 4}, {2, 4}, {8, 4}, {1, 2, 4}, {1, 8, 4}, {2, 8, 4}, {1, 2, 8, 4} }
 ```
 Lastly, we take the sum of the elements of each sub-element to get the room IDs, which will now be our room selection.
 ```
