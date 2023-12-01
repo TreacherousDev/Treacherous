@@ -24,9 +24,9 @@ A --> A | A + b | b | A + c | c
 ```
 With this set of rules, a sample production would look like this:
 ```
-	S
-	|
-	A
+    S
+    |
+    A
    / \
   A   b
  / \
@@ -82,7 +82,7 @@ Let opposite direction = O(x)
 Let branch = B
 	B ∈ D
 Let unoccupied directions = N
-	N ⊆ D | B in N = unoccupied, for every B in N
+	N ⊆ D | N contains all unoccupied B in D 
 Let room produced = R'
 	R' = { A + O(B) | A ⊆ N }
 
