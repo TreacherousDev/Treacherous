@@ -12,6 +12,7 @@ layer_0/tile_data = PackedInt32Array(-1, 0, 0, 65535, 0, 0, 131071, 0, 0, 196607
 script = ExtResource("2_rpwr4")
 braid_percentage = 0.0
 icon1 = ExtResource("3_y4frk")
+end_cell = Vector2i(59, 31)
 map_size = 10000
 start_id = 4
 expand_mode = 1

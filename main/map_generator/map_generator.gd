@@ -68,13 +68,10 @@ const CHILDREN = 4
 
 
 func _ready():
-	await get_tree().create_timer(0.6).timeout
 	randomize()
 	rng.set_seed(randi())
 	print(rng.seed)
-	await start()
-	await get_tree().create_timer(1.5).timeout
-	get_tree().reload_current_scene()
+	start()
 
 # Enter: Reload Map
 # Esc: Quit Game
@@ -83,11 +80,7 @@ func _process(_delta):
 		get_tree().reload_current_scene()
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
-	if Input.is_action_just_pressed("ui_down"):
-		draw_edge()
 
-func draw_edge():
-	pass
 
 @export var start_id: int = 15
 var expansion_requests: int = 0

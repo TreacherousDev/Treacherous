@@ -43,7 +43,7 @@ func connect_to_neighbor(closing_room: Vector2i, room_id: int):
 	var new_neighbor_room_value = selected_neighbor_room_id + opposite_direction[selected_neighbor_direction]
 	set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_room_value, 0))
 
-# GET WALL OPENINGS
+# GET NEIGHBORS
 # Input: position of cell
 # Output: array containing all non-border von neuman neighbors, expressed as int bit flags
 func get_neighbors(cell: Vector2i) -> Array:
@@ -98,24 +98,9 @@ func spawn_marker(icon, current_location, tile_size, rot):
 	new_icon.rotation_degrees = rot
 
 
-var mouseclick_1
-var mouseclick_2
-var click_count = 0
-func _input(event):
-	if event is InputEventMouseButton:
-		if event.pressed:
-			if click_count == 0:
-				var click_1 = local_to_map(get_local_mouse_position())
-				if get_used_cells(0).has(click_1):
-					clear_previous_markers()
-					mouseclick_1 = click_1
-					click_count += 1
-			elif click_count == 1:
-				var click_2 = local_to_map(get_local_mouse_position())
-				if get_used_cells(0).has(click_2):
-					mouseclick_2 = click_2
-					click_count = 0
-					create_path()
+@export var start_cell: Vector2i
+@export var end_cell: Vector2i
+
 
 
 func clear_previous_markers():
@@ -128,10 +113,8 @@ var pointer_2
 var pointer_1_path = []
 var pointer_2_path = []
 func create_path():
-#	pointer_1 = mouseclick_1
-#	pointer_2 = mouseclick_2
-	pointer_1 = Vector2i(0, 0)
-	pointer_2 = Vector2i(59, 31)
+	pointer_1 = start_cell
+	pointer_2 = end_cell
 
 	if pointer_1 == pointer_2:
 		print("You are already here!")
