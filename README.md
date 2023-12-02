@@ -265,4 +265,12 @@ If we map each number to their respective room value, it should look like this:
 
 ![map](https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps/assets/55629534/9c00c436-1a28-4e9c-86d3-0e3ae5c57dce)
 
+
+# Map Customization
+Because our tree automata is not deterministic, in that node production relies on picking a random element from an element pool, there is no proper way to control the growth of the map to adhere to a certain cell count. One p[roduction might lead to an incredibly small room, while another might be infinitely large. With this, there are 2 main problems we have to tackle, which are:
+1. Map Closing, for when the automata approaches the cell count limit
+2. Map Expansion, for when the automata stops prematurely before the expected limit is reached
+
+## Map Closing
+Handling map closing is pretty straightforward. Each node produced will be given access to a global variable that will be used to track the current cell count. Each node production increments this number by 1.
 WIP - Will keep this updated!
