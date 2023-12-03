@@ -3,29 +3,43 @@ extends TDMapGenerator
 
 # END PRODUCTION
 func end_production():
-	connect_dead_ends()
+	braid_maze()
 	await get_tree().create_timer(0.6).timeout
 	create_path()
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
 
 @export var braid_percentage: float = 100
-func connect_dead_ends():
-	var closing_rooms_to_connect: int = closing_rooms.size() * (braid_percentage/100)
-	shuffle_array_with_seed(closing_rooms)
-	var rooms_to_handle = []
-	for i in range(closing_rooms_to_connect):
-		rooms_to_handle.append(closing_rooms[i])
-	
-	for room in rooms_to_handle:
-		var room_id: int = get_cell_atlas_coords(0, room).x
-		if room_id == cell_data[room][PARENT_DIRECTION]:
-			await get_tree().process_frame
-			connect_to_neighbor(room, room_id)
+func connect_dead_ends(dead_ends_to_connect: Array):
+	for dead_end in dead_ends_to_connect:
+		var id: int = get_cell_atlas_coords(0, dead_end).x
+		if id == cell_data[dead_end][PARENT_DIRECTION]:
+			connect_to_neighbor(dead_end, id)
 
-func connect_to_neighbor(closing_room: Vector2i, room_id: int):
+# BRAID MAZE
+# Connects dead ends to a random neighbor. % of dead ends connected is controlled by braid_percentage
+func braid_maze():
+	var dead_ends_to_connect = select_dead_ends()
+	connect_dead_ends(dead_ends_to_connect)
+
+# SELECT DEAD ENDS
+# Returns a list of randomly selected dead ends from all available dead ends
+func select_dead_ends() -> Array:
+	var number_of_dead_ends_to_connect: int = closing_rooms.size() * (braid_percentage/100)
+	shuffle_array_with_seed(closing_rooms)
+	
+	var dead_ends_to_connect = []
+	for i in range(number_of_dead_ends_to_connect):
+		dead_ends_to_connect.append(closing_rooms[i])
+	return dead_ends_to_connect
+
+# CONNECT TO NEIGHBOR
+# Called for every element in select_dead_ends
+# Adds a new branch towards a random neighbor that is not yet connected
+# Its neighbor then also adds the matching branch to connect the two
+func connect_to_neighbor(dead_end: Vector2i, id: int):
 	var opposite_direction = {1: 4, 2: 8, 4: 1, 8: 2}
-	var neighbors = get_neighbors(closing_room)
-	var parent = cell_data[closing_room][PARENT_DIRECTION]
+	var neighbors = get_neighbors(dead_end)
+	var parent = cell_data[dead_end][PARENT_DIRECTION]
 	
 	if parent != null:
 		neighbors.erase(parent)
@@ -34,14 +48,14 @@ func connect_to_neighbor(closing_room: Vector2i, room_id: int):
 		return
 	
 	var selected_neighbor_direction: int = select_random_element(neighbors)
-	var selected_neighbor_coords: Vector2i = closing_room + direction_to_coords[selected_neighbor_direction]
-	var selected_neighbor_room_id: int = get_cell_atlas_coords(0, selected_neighbor_coords).x
+	var selected_neighbor_coords: Vector2i = dead_end + direction_to_coords[selected_neighbor_direction]
+	var selected_neighbor_cell_id: int = get_cell_atlas_coords(0, selected_neighbor_coords).x
 	
-	var new_room_value = room_id + selected_neighbor_direction
-	set_cell(0, closing_room, 0, Vector2i(new_room_value, 0))
+	var new_cell_value = id + selected_neighbor_direction
+	set_cell(0, dead_end, 0, Vector2i(new_cell_value, 0))
 	
-	var new_neighbor_room_value = selected_neighbor_room_id + opposite_direction[selected_neighbor_direction]
-	set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_room_value, 0))
+	var new_neighbor_cell_value = selected_neighbor_cell_id + opposite_direction[selected_neighbor_direction]
+	set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_cell_value, 0))
 
 # GET NEIGHBORS
 # Input: position of cell
@@ -75,15 +89,7 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
 
-#	force_spawn_room(1, room_selection)
-#	force_spawn_room(2, room_selection)
-#	force_spawn_room(4, room_selection)
-#	force_spawn_room(8, room_selection)
-
 ################################################################################################
-
-
-
 
 @export var icon1: PackedScene
 @export var icon2: PackedScene
@@ -100,16 +106,9 @@ func spawn_marker(icon, current_location, tile_size, rot):
 
 @export var start_cell: Vector2i
 @export var end_cell: Vector2i
-
-
-
-func clear_previous_markers():
-	for marker in get_tree().get_nodes_in_group("path_marker"):
-		marker.queue_free()
-
 var vector_to_rotation = {Vector2i.UP: 90, Vector2i.RIGHT: 180, Vector2i.DOWN: 270, Vector2i.LEFT: 0}
-var pointer_1
-var pointer_2
+var pointer_1: Vector2i
+var pointer_2: Vector2i
 var pointer_1_path = []
 var pointer_2_path = []
 func create_path():
