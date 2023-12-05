@@ -91,8 +91,7 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 
 ################################################################################################
 
-@export var icon1: PackedScene
-@export var icon2: PackedScene
+@export var icon: PackedScene
 func spawn_marker(icon, current_location, tile_size, rot):
 	var size_x = tile_size.x
 	var size_y = tile_size.y
@@ -123,8 +122,7 @@ func create_path():
 	connect_pointers_by_increment()
 	pointer_2_path.reverse()
 	var path = pointer_1_path + pointer_2_path
-
-	animate_path(path)
+	draw_path(path)
 
 func connect_pointers_by_increment():
 	while pointer_1 != pointer_2:
@@ -150,14 +148,14 @@ func match_pointer_depths():
 			difference += 1
 
 
-func animate_path(path: Array):
+func draw_path(path: Array):
 	var i = 0
 	while i < path.size()-1:
 #		await get_tree().create_timer(0.05).timeout
 		var path_rotation = vector_to_rotation[path[i] - path[i+1]]
-		spawn_marker(icon1, path[i], tile_set.tile_size, path_rotation)
+		spawn_marker(icon, path[i], tile_set.tile_size, path_rotation)
 		i += 1
-
+	
 	pointer_1_path.clear()
 	pointer_2_path.clear()
 	path.clear()

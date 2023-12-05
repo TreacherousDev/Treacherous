@@ -83,6 +83,7 @@ func _process(_delta):
 
 
 @export var start_id: int = 15
+@export var start_cells: Array
 var expansion_requests: int = 0
 ################
 # START METHOD #
