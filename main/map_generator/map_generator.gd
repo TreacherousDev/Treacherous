@@ -65,6 +65,7 @@ const PARENT_DIRECTION = 2
 ## Array containing unoccupied directions, expressed as bit flags
 const OPEN_DIRECTIONS = 3
 const CHILDREN = 4
+const TREE_ID = 5
 
 
 func _ready():
@@ -90,12 +91,23 @@ var expansion_requests: int = 0
 ################
 ## Initialzes the algorithm from the origin
 func start():
-	var start_from = Vector2i.ZERO
-	set_cell(0, start_from, 0, Vector2i(start_id, 0))
-	cell_data[start_from] = [0, null, null, [], []]
-	current_map_size += 1
-	mark_cells_to_fill(start_from)
 	
+	for start_cell in start_cells:
+		print("a")
+		foo(start_cell)
+
+
+func foo(start_cell):
+	await get_tree().physics_frame
+	var start_id = start_cell.cell_id
+	var start_position = start_cell.position
+	var tree_id = start_cell.tree_id
+	
+	set_cell(0, start_position, 0, Vector2i(start_id, 0))
+	cell_data[start_position] = [0, null, null, [], [], tree_id]
+	current_map_size += 1
+	mark_cells_to_fill(start_position)
+
 	while (next_active_cells.size() != 0):
 		iterations += 1
 		if iterations % batch_size == 0:
@@ -112,7 +124,6 @@ func start():
 		expansion_requests = 0
 		
 	end_production()
-
 
 ## Tracker for how many times the run_algorithm() function executes
 var iterations: int = 0
@@ -232,7 +243,8 @@ func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 		var parent_cell_direction: int = coords_to_direction[parent_cell - cell]
 		var parent_depth: int = cell_data[parent_cell][DEPTH]
 		var open_directions: Array = get_wall_openings(cell)
-		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions, []]
+		var seed_id: int = cell_data[parent_cell][TREE_ID]
+		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions, [], seed_id]
 		cell_data[parent_cell][CHILDREN].append(cell)
 
 # GET POWERSET
@@ -306,11 +318,11 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 20:
-		force_spawn_room(parent_direction, room_selection)
-		# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration < 2:
+	if rooms_expected_next_iteration < 20:
 		delete_rooms_from_pool([parent_direction], room_selection)
+		# sample 1: prevents the map from branching more than 10 branching paths per iteration
+#	if rooms_expected_next_iteration < 2:
+#		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
 # ADD ROOMS TO POOL
