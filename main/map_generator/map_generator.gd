@@ -166,7 +166,7 @@ func fill_cell(cell):
 
 # SPAWN ROOMS
 # Pick a random available room from the selection and set the cell to its value
-func spawn_room(cell_to_fill: Vector2i, room_selection: Array[int]):
+func spawn_room(cell_to_fill: Vector2i, room_selection: Array):
 	var select_random: int = rng.randi_range(0, room_selection.size() - 1)
 	var selected_room: int = room_selection[select_random]
 	if selected_room == cell_data[cell_to_fill][PARENT_DIRECTION]:
@@ -176,8 +176,8 @@ func spawn_room(cell_to_fill: Vector2i, room_selection: Array[int]):
 # GET WALL OPENINGS
 # Input: position of cell
 # Output: array containing all unoccupied von neuman neighbors, expressed as int bit flags
-func get_wall_openings(cell: Vector2i) -> Array[int]:
-	var wall_openings: Array[int] = []
+func get_wall_openings(cell: Vector2i) -> Array:
+	var wall_openings: Array = []
 	if get_cell_atlas_coords(0, cell + Vector2i.UP) == Vector2i(-1, -1):
 		wall_openings.append(1)
 	if get_cell_atlas_coords(0, cell + Vector2i.RIGHT) == Vector2i(-1, -1):
@@ -191,10 +191,10 @@ func get_wall_openings(cell: Vector2i) -> Array[int]:
 # GET CELLS TO FILL
 # Input: position of cell
 # Output: list of cells to fill according to the cell's open branches, excluding the branch to parent
-func get_cells_to_fill(cell: Vector2i) -> Array[Vector2i]:
+func get_cells_to_fill(cell: Vector2i) -> Array:
 	var room_id: int = get_cell_atlas_coords(0, cell).x
 	var open_directions: Array = room_id_to_directions[room_id]
-	var cells_to_fill: Array[Vector2i] = convert_directions_to_cells_coords(open_directions, cell)
+	var cells_to_fill: Array = convert_directions_to_cells_coords(open_directions, cell)
 	#exclude parent direction from producible directions if it has a parent
 	#this prevents infinite looping back and forth
 	var parent = cell_data[cell][PARENT_POSITION]
@@ -205,19 +205,19 @@ func get_cells_to_fill(cell: Vector2i) -> Array[Vector2i]:
 # GET ROOM SELECTION
 # Input: cell
 # Output: producible rooms of cell based on open directions
-func get_room_selection(cell_to_fill: Vector2i) -> Array[int]:
-	var wall_openings: Array[int] = get_wall_openings(cell_to_fill)
+func get_room_selection(cell_to_fill: Vector2i) -> Array:
+	var wall_openings: Array = get_wall_openings(cell_to_fill)
 	var possible_branch_directions: Array = get_powerset(wall_openings)
 	var parent_direction: int = cell_data[cell_to_fill][PARENT_DIRECTION]
-	var room_selection: Array[int] = get_possible_rooms(possible_branch_directions, parent_direction)
+	var room_selection: Array = get_possible_rooms(possible_branch_directions, parent_direction)
 	return room_selection
 
 # CONVERT DIRECTIONS TO CELLS COORDS
 # Input: parent cell position and directions to branch
 # Output: producible cell positions relative to parent
 # Ex: (0, 0) is a left-right room type, output becomes [(1, 0) (-1, 0)]
-func convert_directions_to_cells_coords(directions: Array, parent_cell: Vector2i) -> Array[Vector2i]:
-	var cells_to_fill: Array[Vector2i] = []
+func convert_directions_to_cells_coords(directions: Array, parent_cell: Vector2i) -> Array:
+	var cells_to_fill: Array = []
 	for direction in directions.size():
 		var cell: Vector2i = direction_to_coords[directions[direction]] + parent_cell
 		cells_to_fill.append(cell)
@@ -226,12 +226,12 @@ func convert_directions_to_cells_coords(directions: Array, parent_cell: Vector2i
 # STORE CELL DATA
 # Stores the following into the cell_data dictionary:
 # Depth, Parent Position, Parent Direction, Open Directions
-func store_cell_data(cells_to_fill: Array[Vector2i], parent_cell: Vector2i):
+func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 	var coords_to_direction = {Vector2i.UP: 1, Vector2i.RIGHT: 2, Vector2i.DOWN: 4, Vector2i.LEFT: 8}
 	for cell in cells_to_fill:
 		var parent_cell_direction: int = coords_to_direction[parent_cell - cell]
 		var parent_depth: int = cell_data[parent_cell][DEPTH]
-		var open_directions: Array[int] = get_wall_openings(cell)
+		var open_directions: Array = get_wall_openings(cell)
 		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions, []]
 		cell_data[parent_cell][CHILDREN].append(cell)
 
@@ -242,7 +242,7 @@ func store_cell_data(cells_to_fill: Array[Vector2i], parent_cell: Vector2i):
 # So each element will have the parent direction plus other possible combinations
 # This is more efficient than appending the parent direction beforehand, getting the non-empty powerset, 
 # And filtering out those that dont have the parent direction as an elelment
-func get_powerset(input_set: Array[int]) -> Array:
+func get_powerset(input_set: Array) -> Array:
 	var result: Array = [[]]
 	for element in input_set:
 		var new_subsets: Array = []
@@ -257,8 +257,8 @@ func get_powerset(input_set: Array[int]) -> Array:
 # Output set: possible combinations with parent direction appended to each element, summed
 # By default, the parent direction will always not be included because get_wall_openings detects the direction as blocked
 # The parent direction is appended to each array to get the list of possible spawnable rooms
-func get_possible_rooms(input_set: Array, number_to_append: int) -> Array[int]:
-	var output_set: Array[int] = []
+func get_possible_rooms(input_set: Array, number_to_append: int) -> Array:
+	var output_set: Array = []
 	for subset in input_set:
 		subset.append(number_to_append)
 		var sum: int = 0
@@ -272,7 +272,7 @@ func get_possible_rooms(input_set: Array, number_to_append: int) -> Array[int]:
 # This makes it so that nearby cells detect this cell as occupied
 # And prevents them from opening towards it and causing collision conflict
 func mark_cells_to_fill(cell: Vector2i):
-	var cells_to_fill: Array[Vector2i] = get_cells_to_fill(cell)
+	var cells_to_fill: Array = get_cells_to_fill(cell)
 	store_cell_data(cells_to_fill, cell)
 	for cell_to_fill in cells_to_fill:
 		set_cell(0, cell_to_fill, 0, Vector2i.ZERO)
@@ -290,7 +290,7 @@ func mark_cells_to_fill(cell: Vector2i):
 
 # MANIPULATE ROOM SELECTION
 # all methods to manipulate rooom selection goes here
-func manipulate_room_selection(cell: Vector2i, room_selection: Array[int]):
+func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
 	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
 	if current_map_size + rooms_expected_next_iteration >= map_size:
@@ -317,7 +317,7 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array[int]):
 # Input: array of rooms to add and its frequency
 # Checks if the room already exists in the selection by default and only then increases its odds
 # This is done to prevent rooms from spawning room types that mismatch
-func add_rooms_to_pool(rooms: Array[int], frequency: int, room_selection: Array[int]):
+func add_rooms_to_pool(rooms: Array, frequency: int, room_selection: Array):
 	for room in rooms:
 		if (room_selection.has(room)):
 			while (frequency > 0):
@@ -328,7 +328,7 @@ func add_rooms_to_pool(rooms: Array[int], frequency: int, room_selection: Array[
 # Input: array of rooms deleted from pool
 # Only deletes the said room the room pool has more than 1 element
 # This is done to prevent null error and ensures an emtpy array is never passed back
-func delete_rooms_from_pool(rooms: Array[int], room_selection: Array[int]):
+func delete_rooms_from_pool(rooms: Array, room_selection: Array):
 	for room in rooms:
 		if (room_selection.size() > 1):
 			room_selection.erase(room)
@@ -337,7 +337,7 @@ func delete_rooms_from_pool(rooms: Array[int], room_selection: Array[int]):
 # Input: room id
 # Output: array with the input room id as the only element
 # Only forces spawning the room if the room already exists in the room selection
-func force_spawn_room(room: int, room_selection: Array[int]):
+func force_spawn_room(room: int, room_selection: Array):
 	if room_selection.has(room):
 		room_selection.clear()
 		room_selection.append(room)
@@ -370,7 +370,7 @@ func expand_map():
 		closing_rooms.erase(room_to_expand)
 	
 	var room_id: int = get_cell_atlas_coords(0, room_to_expand).x
-	var expandable_directions: Array[int] = cell_data[room_to_expand][OPEN_DIRECTIONS]
+	var expandable_directions: Array = cell_data[room_to_expand][OPEN_DIRECTIONS]
 	var selected_expand_direction: int = select_random_element(expandable_directions)
 	var expanded_room: int = room_id + selected_expand_direction
 	set_cell(0, room_to_expand, 0, Vector2i(expanded_room, 0))
