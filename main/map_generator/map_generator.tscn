@@ -1,10 +1,39 @@
-[gd_scene load_steps=5 format=3 uid="uid://d4ljvc70iujkn"]
+[gd_scene load_steps=10 format=3 uid="uid://d4ljvc70iujkn"]
 
 [ext_resource type="TileSet" uid="uid://b0xvjp60its20" path="res://main/resources/map_generator_maze.tres" id="1_1usas"]
 [ext_resource type="Script" path="res://main/map_generator/maze_generator.gd" id="2_rpwr4"]
+[ext_resource type="Script" path="res://map_data.gd" id="3_3tkqc"]
 [ext_resource type="Script" path="res://main/map_generator/draw_path.gd" id="5_psan5"]
 
-[sub_resource type="Resource" id="Resource_qngnq"]
+[sub_resource type="Resource" id="Resource_xj0hk"]
+script = ExtResource("3_3tkqc")
+cell_id = 1
+position = Vector2i(0, 0)
+seed_id = 1
+
+[sub_resource type="Resource" id="Resource_23ku3"]
+script = ExtResource("3_3tkqc")
+cell_id = 1
+position = Vector2i(0, 0)
+seed_id = 1
+
+[sub_resource type="Resource" id="Resource_fc4tr"]
+script = ExtResource("3_3tkqc")
+cell_id = 1
+position = Vector2i(0, 0)
+seed_id = 1
+
+[sub_resource type="Resource" id="Resource_bm03g"]
+script = ExtResource("3_3tkqc")
+cell_id = 1
+position = Vector2i(0, 0)
+seed_id = 1
+
+[sub_resource type="Resource" id="Resource_4u11e"]
+script = ExtResource("3_3tkqc")
+cell_id = 1
+position = Vector2i(0, 0)
+seed_id = 1
 
 [node name="Tilemap" type="TileMap"]
 tile_set = ExtResource("1_1usas")
@@ -15,7 +44,7 @@ braid_percentage = 0.0
 end_cell = Vector2i(59, 31)
 map_size = 10000
 start_id = 4
-start_cells = [SubResource("Resource_qngnq"), null]
+start_cells = Array[ExtResource("3_3tkqc")]([SubResource("Resource_xj0hk"), SubResource("Resource_23ku3"), SubResource("Resource_fc4tr"), SubResource("Resource_bm03g"), SubResource("Resource_4u11e")])
 expand_mode = 1
 
 [node name="Camera2D" type="Camera2D" parent="."]
