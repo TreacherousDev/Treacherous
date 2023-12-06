@@ -12,40 +12,23 @@ class_name TDMapGenerator
 var rng := RandomNumberGenerator.new()
 
 ## Lookup table for converting room IDs into its component bit flag integers
-func get_directions_of_room_id(id: int) -> Array[int]:
-	var directions: Array[int] = []
-	match (id):
-		1: 
-			directions = [1]
-		2: 
-			directions = [2] 
-		3: 
-			directions = [1, 2]
-		4: 
-			directions = [4]
-		5: 
-			directions = [1, 4]
-		6: 
-			directions = [2, 4] 
-		7: 
-			directions = [1, 2, 4]
-		8: 
-			directions = [8]
-		9: 
-			directions = [1, 8]
-		10: 
-			directions = [2, 8]
-		11: 
-			directions = [1, 2, 8]
-		12: 
-			directions = [4, 8]
-		13: 
-			directions = [1, 4, 8]
-		14: 
-			directions = [2, 4, 8] 
-		15: 
-			directions = [1, 2, 4, 8]
-	return directions
+var room_id_to_directions = {
+	1: [1], 
+	2: [2], 
+	3: [1, 2], 
+	4: [4], 
+	5: [1, 4], 
+	6: [2, 4], 
+	7: [1, 2, 4], 
+	8: [8], 
+	9: [1, 8], 
+	10: [2, 8], 
+	11: [1, 2, 8], 
+	12: [4, 8], 
+	13: [1, 4, 8], 
+	14: [2, 4, 8], 
+	15: [1, 2, 4, 8]
+	}
 
 var direction_to_coords = {
 	1: Vector2i.UP, 
@@ -210,7 +193,7 @@ func get_wall_openings(cell: Vector2i) -> Array[int]:
 # Output: list of cells to fill according to the cell's open branches, excluding the branch to parent
 func get_cells_to_fill(cell: Vector2i) -> Array[Vector2i]:
 	var room_id: int = get_cell_atlas_coords(0, cell).x
-	var open_directions: Array[int] = get_directions_of_room_id(room_id)
+	var open_directions: Array = room_id_to_directions[room_id]
 	var cells_to_fill: Array[Vector2i] = convert_directions_to_cells_coords(open_directions, cell)
 	#exclude parent direction from producible directions if it has a parent
 	#this prevents infinite looping back and forth
@@ -233,7 +216,7 @@ func get_room_selection(cell_to_fill: Vector2i) -> Array[int]:
 # Input: parent cell position and directions to branch
 # Output: producible cell positions relative to parent
 # Ex: (0, 0) is a left-right room type, output becomes [(1, 0) (-1, 0)]
-func convert_directions_to_cells_coords(directions: Array[int], parent_cell: Vector2i) -> Array[Vector2i]:
+func convert_directions_to_cells_coords(directions: Array, parent_cell: Vector2i) -> Array[Vector2i]:
 	var cells_to_fill: Array[Vector2i] = []
 	for direction in directions.size():
 		var cell: Vector2i = direction_to_coords[directions[direction]] + parent_cell
