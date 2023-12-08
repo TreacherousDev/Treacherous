@@ -5,7 +5,7 @@ class_name TreacherousMapGenerator
 # https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps #
 ##################################################################################
 
-@onready var map: TileMap = get_parent()
+var map: TileMap = get_parent()
 ## The number of rooms expected.
 @export var map_size: int = 100
 
@@ -81,6 +81,8 @@ var expansion_requests: int = 0
 ## Initialzes the algorithm from the origin
 func start():
 	print(start_position)
+	print(map_size)
+	map = get_parent()
 	map.set_cell(0, start_position, 0, Vector2i(start_id, 0))
 	cell_data[start_position] = [0, null, null, [], []]
 	current_map_size += 1

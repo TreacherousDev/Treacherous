@@ -1,4 +1,4 @@
-extends TDMapGenerator
+extends TreacherousMapGenerator
 
 
 # END PRODUCTION
@@ -11,7 +11,7 @@ func end_production():
 @export var braid_percentage: float = 100
 func connect_dead_ends(dead_ends_to_connect: Array):
 	for dead_end in dead_ends_to_connect:
-		var id: int = get_cell_atlas_coords(0, dead_end).x
+		var id: int = map.get_cell_atlas_coords(0, dead_end).x
 		if id == cell_data[dead_end][PARENT_DIRECTION]:
 			connect_to_neighbor(dead_end, id)
 
@@ -49,26 +49,26 @@ func connect_to_neighbor(dead_end: Vector2i, id: int):
 	
 	var selected_neighbor_direction: int = select_random_element(neighbors)
 	var selected_neighbor_coords: Vector2i = dead_end + direction_to_coords[selected_neighbor_direction]
-	var selected_neighbor_cell_id: int = get_cell_atlas_coords(0, selected_neighbor_coords).x
+	var selected_neighbor_cell_id: int = map.get_cell_atlas_coords(0, selected_neighbor_coords).x
 	
 	var new_cell_value = id + selected_neighbor_direction
-	set_cell(0, dead_end, 0, Vector2i(new_cell_value, 0))
+	map.set_cell(0, dead_end, 0, Vector2i(new_cell_value, 0))
 	
 	var new_neighbor_cell_value = selected_neighbor_cell_id + opposite_direction[selected_neighbor_direction]
-	set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_cell_value, 0))
+	map.set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_cell_value, 0))
 
 # GET NEIGHBORS
 # Input: position of cell
 # Output: array containing all non-border von neuman neighbors, expressed as int bit flags
 func get_neighbors(cell: Vector2i) -> Array:
 	var neighbors = []
-	if get_cell_atlas_coords(0, cell + Vector2i.UP) != Vector2i.ZERO:
+	if map.get_cell_atlas_coords(0, cell + Vector2i.UP) != Vector2i.ZERO:
 		neighbors.append(1)
-	if get_cell_atlas_coords(0, cell + Vector2i.RIGHT) != Vector2i.ZERO:
+	if map.get_cell_atlas_coords(0, cell + Vector2i.RIGHT) != Vector2i.ZERO:
 		neighbors.append(2)
-	if get_cell_atlas_coords(0, cell + Vector2i.DOWN) != Vector2i.ZERO:
+	if map.get_cell_atlas_coords(0, cell + Vector2i.DOWN) != Vector2i.ZERO:
 		neighbors.append(4)
-	if get_cell_atlas_coords(0, cell + Vector2i.LEFT) != Vector2i.ZERO:
+	if map.get_cell_atlas_coords(0, cell + Vector2i.LEFT) != Vector2i.ZERO:
 		neighbors.append(8)
 	return neighbors
 
@@ -153,7 +153,7 @@ func draw_path(path: Array):
 	while i < path.size()-1:
 #		await get_tree().create_timer(0.05).timeout
 		var path_rotation = vector_to_rotation[path[i] - path[i+1]]
-		spawn_marker(icon, path[i], tile_set.tile_size, path_rotation)
+		spawn_marker(icon, path[i], map.tile_set.tile_size, path_rotation)
 		i += 1
 	
 	pointer_1_path.clear()

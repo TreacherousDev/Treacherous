@@ -1,4 +1,4 @@
-extends TDMapGenerator
+extends TreacherousMapGenerator
 
 
 func end_production():
@@ -28,7 +28,7 @@ func smoothen_border():
 		if chunk % 30 == 0:
 			await get_tree().process_frame
 		chunk += 1
-		set_cell(0, cell, 0, Vector2i(16, 0))
+		map.set_cell(0, cell, 0, Vector2i(16, 0))
 		
 	if border_cells_to_fill.size() != 0:
 		border_cells_to_fill = get_next_border_cells_to_fill(fill_next)
@@ -42,7 +42,7 @@ func get_moore_neighbor_count_of_cell(cell) -> int:
 	var neighbor_count: int = 0
 	for direction in moore_directions:
 		var moore_neighbor = cell + direction
-		if get_cell_atlas_coords(0, moore_neighbor) != Vector2i(-1, -1):
+		if map.get_cell_atlas_coords(0, moore_neighbor) != Vector2i(-1, -1):
 			neighbor_count += 1
 	return neighbor_count
 
@@ -52,7 +52,7 @@ func get_border():
 	for cell in expandable_rooms:
 		for direction in vn_directions:
 			var vn_neighbor = cell + direction
-			if get_cell_atlas_coords(0, vn_neighbor) == Vector2i(-1, -1):
+			if map.get_cell_atlas_coords(0, vn_neighbor) == Vector2i(-1, -1):
 				if !border_cells_to_fill.has(vn_neighbor):
 					border_cells_to_fill.append(vn_neighbor)
 	smoothen_border()
@@ -62,7 +62,7 @@ func get_next_border_cells_to_fill(recently_filled_cells) -> Array:
 	for cell in recently_filled_cells:
 		for direction in moore_directions:
 			var neighbor = cell + direction
-			if get_cell_atlas_coords(0, neighbor) == Vector2i(-1, -1):
+			if map.get_cell_atlas_coords(0, neighbor) == Vector2i(-1, -1):
 				if !result.has(neighbor):
 					result.append(neighbor)
 	return result
@@ -88,6 +88,6 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	
 
 		# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration < 20:
-		delete_rooms_from_pool([parent_direction], room_selection)
+	if rooms_expected_next_iteration > 20:
+		force_spawn_room(parent_direction, room_selection)
 ################################################################################################
