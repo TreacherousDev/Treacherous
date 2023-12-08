@@ -10,18 +10,24 @@ script = ExtResource("3_3tkqc")
 cell_id = 15
 position = Vector2i(-70, -20)
 tree_id = 1
+map_size = 20
+expand_mode = 2
 
 [sub_resource type="Resource" id="Resource_23ku3"]
 script = ExtResource("3_3tkqc")
 cell_id = 15
 position = Vector2i(70, -20)
 tree_id = 1
+map_size = 20
+expand_mode = 2
 
 [sub_resource type="Resource" id="Resource_sas36"]
 script = ExtResource("3_3tkqc")
 cell_id = 15
 position = Vector2i(0, 40)
 tree_id = 1
+map_size = 20
+expand_mode = 2
 
 [node name="Tilemap" type="TileMap"]
 tile_set = ExtResource("1_d4asi")
