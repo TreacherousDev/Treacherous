@@ -1,10 +1,11 @@
-extends TileMap
+extends Node2D
 
-class_name TDMapGenerator
+class_name TreacherousMapGenerator
 ##################################################################################
 # https://github.com/TreacherousDev/Cellular-Procedural-Generation-with-Tilemaps #
 ##################################################################################
 
+@onready var map: TileMap = get_parent()
 ## The number of rooms expected.
 @export var map_size: int = 100
 
@@ -65,49 +66,26 @@ const PARENT_DIRECTION = 2
 ## Array containing unoccupied directions, expressed as bit flags
 const OPEN_DIRECTIONS = 3
 const CHILDREN = 4
-const TREE_ID = 5
 
 
 func _ready():
 	randomize()
 	rng.set_seed(randi())
-	print(rng.seed)
-	start()
-
-# Enter: Reload Map
-# Esc: Quit Game
-func _process(_delta):
-	if Input.is_action_just_pressed("ui_accept"):
-		get_tree().reload_current_scene()
-	if Input.is_key_pressed(KEY_ESCAPE):
-		get_tree().quit()
-
 
 @export var start_id: int = 15
-@export var start_cells: Array[MapData] = []
+@export var start_position: Vector2i = Vector2i.ZERO
 var expansion_requests: int = 0
 ################
 # START METHOD #
 ################
 ## Initialzes the algorithm from the origin
 func start():
-	
-	for start_cell in start_cells:
-		print("a")
-		foo(start_cell)
-
-
-func foo(start_cell):
-	await get_tree().physics_frame
-	var start_id = start_cell.cell_id
-	var start_position = start_cell.position
-	var tree_id = start_cell.tree_id
-	
-	set_cell(0, start_position, 0, Vector2i(start_id, 0))
-	cell_data[start_position] = [0, null, null, [], [], tree_id]
+	print(start_position)
+	map.set_cell(0, start_position, 0, Vector2i(start_id, 0))
+	cell_data[start_position] = [0, null, null, [], []]
 	current_map_size += 1
 	mark_cells_to_fill(start_position)
-
+	
 	while (next_active_cells.size() != 0):
 		iterations += 1
 		if iterations % batch_size == 0:
@@ -124,6 +102,7 @@ func foo(start_cell):
 		expansion_requests = 0
 		
 	end_production()
+
 
 ## Tracker for how many times the run_algorithm() function executes
 var iterations: int = 0
@@ -182,20 +161,20 @@ func spawn_room(cell_to_fill: Vector2i, room_selection: Array):
 	var selected_room: int = room_selection[select_random]
 	if selected_room == cell_data[cell_to_fill][PARENT_DIRECTION]:
 		closing_rooms.append(cell_to_fill)
-	set_cell(0, cell_to_fill, 0, Vector2i(selected_room, 0))
+	map.set_cell(0, cell_to_fill, 0, Vector2i(selected_room, 0))
 
 # GET WALL OPENINGS
 # Input: position of cell
 # Output: array containing all unoccupied von neuman neighbors, expressed as int bit flags
 func get_wall_openings(cell: Vector2i) -> Array:
 	var wall_openings: Array = []
-	if get_cell_atlas_coords(0, cell + Vector2i.UP) == Vector2i(-1, -1):
+	if map.get_cell_atlas_coords(0, cell + Vector2i.UP) == Vector2i(-1, -1):
 		wall_openings.append(1)
-	if get_cell_atlas_coords(0, cell + Vector2i.RIGHT) == Vector2i(-1, -1):
+	if map.get_cell_atlas_coords(0, cell + Vector2i.RIGHT) == Vector2i(-1, -1):
 		wall_openings.append(2)
-	if get_cell_atlas_coords(0, cell + Vector2i.DOWN) == Vector2i(-1, -1):
+	if map.get_cell_atlas_coords(0, cell + Vector2i.DOWN) == Vector2i(-1, -1):
 		wall_openings.append(4)
-	if get_cell_atlas_coords(0, cell + Vector2i.LEFT) == Vector2i(-1, -1):
+	if map.get_cell_atlas_coords(0, cell + Vector2i.LEFT) == Vector2i(-1, -1):
 		wall_openings.append(8)
 	return wall_openings
 
@@ -203,7 +182,7 @@ func get_wall_openings(cell: Vector2i) -> Array:
 # Input: position of cell
 # Output: list of cells to fill according to the cell's open branches, excluding the branch to parent
 func get_cells_to_fill(cell: Vector2i) -> Array:
-	var room_id: int = get_cell_atlas_coords(0, cell).x
+	var room_id: int = map.get_cell_atlas_coords(0, cell).x
 	var open_directions: Array = room_id_to_directions[room_id]
 	var cells_to_fill: Array = convert_directions_to_cells_coords(open_directions, cell)
 	#exclude parent direction from producible directions if it has a parent
@@ -243,8 +222,7 @@ func store_cell_data(cells_to_fill: Array, parent_cell: Vector2i):
 		var parent_cell_direction: int = coords_to_direction[parent_cell - cell]
 		var parent_depth: int = cell_data[parent_cell][DEPTH]
 		var open_directions: Array = get_wall_openings(cell)
-		var seed_id: int = cell_data[parent_cell][TREE_ID]
-		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions, [], seed_id]
+		cell_data[cell] = [parent_depth + 1, parent_cell, parent_cell_direction, open_directions, []]
 		cell_data[parent_cell][CHILDREN].append(cell)
 
 # GET POWERSET
@@ -287,7 +265,7 @@ func mark_cells_to_fill(cell: Vector2i):
 	var cells_to_fill: Array = get_cells_to_fill(cell)
 	store_cell_data(cells_to_fill, cell)
 	for cell_to_fill in cells_to_fill:
-		set_cell(0, cell_to_fill, 0, Vector2i.ZERO)
+		map.set_cell(0, cell_to_fill, 0, Vector2i.ZERO)
 		rooms_expected_next_iteration += 1
 		update_neighbor_rooms(cell_to_fill)
 		next_active_cells.append(cell_to_fill)
@@ -318,11 +296,11 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration < 20:
-		delete_rooms_from_pool([parent_direction], room_selection)
+	if rooms_expected_next_iteration > 20:
+		force_spawn_room(parent_direction, room_selection)
 		# sample 1: prevents the map from branching more than 10 branching paths per iteration
-#	if rooms_expected_next_iteration < 2:
-#		delete_rooms_from_pool([parent_direction], room_selection)
+	if rooms_expected_next_iteration < 2:
+		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################
 
 # ADD ROOMS TO POOL
@@ -381,15 +359,15 @@ func expand_map():
 	if closing_rooms.has(room_to_expand):
 		closing_rooms.erase(room_to_expand)
 	
-	var room_id: int = get_cell_atlas_coords(0, room_to_expand).x
+	var room_id: int = map.get_cell_atlas_coords(0, room_to_expand).x
 	var expandable_directions: Array = cell_data[room_to_expand][OPEN_DIRECTIONS]
 	var selected_expand_direction: int = select_random_element(expandable_directions)
 	var expanded_room: int = room_id + selected_expand_direction
-	set_cell(0, room_to_expand, 0, Vector2i(expanded_room, 0))
+	map.set_cell(0, room_to_expand, 0, Vector2i(expanded_room, 0))
 	
 	var expand_location: Vector2i = convert_directions_to_cells_coords([selected_expand_direction], room_to_expand)[0]
 	store_cell_data([expand_location], room_to_expand)
-	set_cell(0, expand_location, 0, Vector2i(0, 0))
+	map.set_cell(0, expand_location, 0, Vector2i(0, 0))
 	rooms_expected_next_iteration += 1
 	update_neighbor_rooms(expand_location)
 	next_active_cells.append(expand_location)

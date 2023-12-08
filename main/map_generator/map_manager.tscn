@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://d4ljvc70iujkn"]
+
+[ext_resource type="TileSet" uid="uid://b0jjcpx0cmh36" path="res://main/resources/map_generator_cave.tres" id="1_ewfv4"]
+[ext_resource type="Script" path="res://main/map_generator/map_manager.gd" id="2_bmnuc"]
+[ext_resource type="PackedScene" uid="uid://b37gnjtxanqqk" path="res://generator.tscn" id="3_204fj"]
+
+[node name="map_manager" type="TileMap"]
+tile_set = ExtResource("1_ewfv4")
+format = 2
+script = ExtResource("2_bmnuc")
+generator = ExtResource("3_204fj")
+generator_count = 20
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.2, 0.2)

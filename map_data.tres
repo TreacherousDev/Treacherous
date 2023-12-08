@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="MapData" load_steps=2 format=3 uid="uid://bxuvqwspb6s8e"]
-
-[ext_resource type="Script" path="res://map_data.gd" id="1_h4yx0"]
-
-[resource]
-script = ExtResource("1_h4yx0")
-cell_id = 1
-position = Vector2i(0, 0)
-seed_id = 1
