@@ -123,9 +123,5 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
 	
-	if rooms_expected_next_iteration > 3:
-		force_spawn_room(parent_direction, room_selection)
-		# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	#if rooms_expected_next_iteration < 2:
-	#	delete_rooms_from_pool([parent_direction], room_selection)
+	#add_rooms_to_pool([10], 10, room_selection)
 ################################################################################################

@@ -27,7 +27,7 @@ func smoothen_border():
 		if neighbor_count >= 5:
 			fill_next.append(cell)
 	for cell in fill_next:
-		if chunk % 200 == 0:
+		if chunk % 50 == 0:
 			await get_tree().process_frame
 		chunk += 1
 		map.set_cell(0, cell, 0, Vector2i(16, 0))
@@ -38,7 +38,7 @@ func smoothen_border():
 		if neighbor_count < 4:
 			clear_next.append(cell)
 	for cell in clear_next:
-		if chunk % 200 == 0:
+		if chunk % 50 == 0:
 			await get_tree().process_frame
 		chunk += 1
 		map.set_cell(0, cell, 0, Vector2i(-1, -1))
@@ -103,8 +103,8 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	
 
 		# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 8:
+	if rooms_expected_next_iteration > 20:
 		force_spawn_room(parent_direction, room_selection)
-	#if rooms_expected_next_iteration < 2:
-		#delete_rooms_from_pool([parent_direction], room_selection)
+	if rooms_expected_next_iteration < 8:
+		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################

@@ -15,10 +15,6 @@ run/main_scene="res://main/map_generator/map_manager.tscn"
 config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://main/icon.svg"
 
-[display]
-
-window/size/mode=2
-
 [rendering]
 
 renderer/rendering_method="mobile"

@@ -20,19 +20,20 @@ func _process(_delta):
 
 
 func start():
+	generator_iterator += 1
 	if generator_iterator > generator_count:
 		return
-	generator_iterator += 1
 	
 	var gen = generator.instantiate()
 	add_child(gen)
 	gen.set_script(generator_script)
 	gen.expand_mode = gen.expand_modes.MIN
-	gen.start_position.x = randi_range(-150,150)
-	gen.start_position.y = randi_range(-90,90)
-	gen.start_id = randi_range(1, 15)
-	gen.map_size = randi_range(50, 1400)
-	gen.batch_size = 100
+	#gen.start_position.x = randi_range(-150,150)
+	#gen.start_position.y = randi_range(-90,90)
+	gen.start_position = Vector2i(0, 0)
+	gen.start_id = randi_range(15, 15)
+	gen.map_size = randi_range(50, 70)
+	gen.batch_size = 1
 	gen.finished_generating.connect(generate)
 	gen.start()
 
