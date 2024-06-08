@@ -366,7 +366,15 @@ We do this by having each room keep track of how many of its von neumann neighbo
 ![image](https://github.com/TreacherousDev/Treacherous/assets/55629534/b7f43412-4c07-43fe-a4fe-7789400ef053)
 
 
-##
-Manipulating the Map Structure
+## Manipulating the Map Structure
+Because the map generator is structured as a tree where each node is processed sequentially, one after the other, we can easily manipulate the overall behaviour of the map by changing the odds of the output room based on user-defined conditions. For instance, we can increate the frequency of left-right rooms whenever they are available, by tenfold. Which produces the maps below:
+
+![ezgif-5-fe49acf482](https://github.com/TreacherousDev/Treacherous/assets/55629534/64ad5051-1b22-4f2e-9201-aa6ba70069a4)
+
+There are countless of ways to modify the spawning conditions which enables you to create structured, similar looking yet random and procedurally generated maps. They can be bound to properties such as cell depth, current number of active nodes, current cell count, and any else you can think of. This also allows the generator to be a versatile tool that's used as a baseline for all the cool demos shown in the introduction - Roguelike Maps, Caverns, Mazes, and more.
+
+
+
+
 
 WIP - Will keep this updated!
