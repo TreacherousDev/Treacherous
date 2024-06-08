@@ -315,7 +315,7 @@ parent direction removed = { {2, 1}, {2, 4}, {2, 8}, {2, 1, 4}, {2, 1, 8}, {2, 4
 
 
 We can also implement a heuristic with a higher depth and perfect precision by removing high numbered branches as the map approaches the max size. 
-In the example earlier in map closing, if instead the max map size is 12, we do not assign X as the parent room direction as that would close the map 1 cell prematurely. BUt what we can do is remove the rooms with 3 or more branches to ensure that the next iteration can only spawn a max of 1 other cell to complete the 12 room map size.
+In the example earlier in map closing, if instead the max map size is 12, we do not assign X as the parent room direction as that would close the map 1 cell prematurely. But what we can do is remove the rooms with 3 or more branches to ensure that the next iteration can only spawn a max of 1 other cell to complete the 12 room map size.
 ``` 
 ---2C--   
 --2E9--  
@@ -353,7 +353,9 @@ selection = { 2 }
 
 
 ## Advanced Map Expansion
-There are certain cases where removing closing rooms from the room pool is not enough to ensure that the cell quita is reached. Pending nodes that are supposed to expand to at least one other direction can get completely blocked by surrounding cells and will not be able to branch out any further. Therefore, we must implement a way for the map to expand from existing cells, and consequentially change their room ID on the fly to accomodate for the expansion.
+There are certain cases where removing closing rooms from the room pool is not enough to ensure that the cell quota is reached. Pending nodes that are supposed to expand to at least one other direction can get completely blocked by surrounding cells and will not be able to branch out any further. Below is an example:
+![image](https://github.com/TreacherousDev/Treacherous/assets/55629534/246700b7-4424-455e-8cb6-22e255eec9fe)
+Therefore, we must implement a way for the map to expand from existing cells, and consequentially change their room ID on the fly to accomodate for the expansion.
 
 We do this by having each room keep track of how many of its von neumann neighbors are currently empty. If an expansion is requested, we can then select one room from the list of rooms with at least 1 empty neighbor to expand from. Then, we select one of its available branching directions and place a connecting node adjacent to it. We then update the room that was expanded from, to also include the new expanded direction. Lastly, we handle the logic for determining the spawnable rooms of the newly created node like normal, and repeat the process with as many expansions as needed.
 
