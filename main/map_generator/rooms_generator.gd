@@ -1,4 +1,4 @@
-extends TDMapGenerator
+extends TreacherousMapGenerator
 
 
 ## Path marker sprite
@@ -8,7 +8,7 @@ extends TDMapGenerator
 
 func draw_edge():
 	for edge_room in expandable_rooms:
-		spawn_marker(icon2, edge_room, tile_set.tile_size, 0)
+		spawn_marker(icon2, edge_room, map.tile_set.tile_size, 0)
 		
 @export var icon1: PackedScene
 @export var icon2: PackedScene
@@ -30,14 +30,14 @@ func _input(event):
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if click_count == 0:
-				var click_1 = local_to_map(get_local_mouse_position())
-				if get_used_cells(0).has(click_1):
+				var click_1 = map.local_to_map(get_local_mouse_position())
+				if map.get_used_cells(0).has(click_1):
 					clear_previous_markers()
 					mouseclick_1 = click_1
 					click_count += 1
 			elif click_count == 1:
-				var click_2 = local_to_map(get_local_mouse_position())
-				if get_used_cells(0).has(click_2):
+				var click_2 = map.local_to_map(get_local_mouse_position())
+				if map.get_used_cells(0).has(click_2):
 					mouseclick_2 = click_2
 					click_count = 0
 					create_path()
@@ -98,7 +98,7 @@ func animate_path(path: Array):
 	while i < path.size()-1:
 #		await get_tree().create_timer(0.05).timeout
 		var path_rotation = vector_to_rotation[path[i] - path[i+1]]
-		spawn_marker(icon1, path[i], tile_set.tile_size, path_rotation)
+		spawn_marker(icon1, path[i], map.tile_set.tile_size, path_rotation)
 		i += 1
 		
 	pointer_1_path.clear()
@@ -123,10 +123,9 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
 	
-	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 7:
+	if rooms_expected_next_iteration > 3:
 		force_spawn_room(parent_direction, room_selection)
 		# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration < 2:
-		delete_rooms_from_pool([parent_direction], room_selection)
+	#if rooms_expected_next_iteration < 2:
+	#	delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################

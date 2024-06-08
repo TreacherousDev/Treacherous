@@ -67,6 +67,8 @@ const PARENT_DIRECTION = 2
 const OPEN_DIRECTIONS = 3
 const CHILDREN = 4
 
+signal finished_generating
+
 
 func _ready():
 	randomize()
@@ -80,8 +82,6 @@ var expansion_requests: int = 0
 ################
 ## Initialzes the algorithm from the origin
 func start():
-	print(start_position)
-	print(map_size)
 	map = get_parent()
 	map.set_cell(0, start_position, 0, Vector2i(start_id, 0))
 	cell_data[start_position] = [0, null, null, [], []]
@@ -129,6 +129,7 @@ func run_algorithm():
 # END PRODUCTION
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
+	finished_generating.emit()
 
 # SHUFFLE ARRAY
 # Input: array
