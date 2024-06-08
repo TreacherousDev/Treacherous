@@ -1,6 +1,7 @@
 # Treacherous
 
 A family of cellular procedural generation algorithms powered by probabilistic, context-sensitive tree automata.
+
 View the Technical Documentation [here](https://github.com/TreacherousDev/Treacherous/blob/main/Technical%20Documentation.md).
 
 ### A. Roguelike Dungeons
