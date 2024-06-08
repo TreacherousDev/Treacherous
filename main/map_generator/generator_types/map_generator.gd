@@ -74,6 +74,9 @@ func _ready():
 	randomize()
 	rng.set_seed(randi())
 
+func _input(event):
+	pass
+
 @export var start_id: int = 15
 @export var start_position: Vector2i = Vector2i.ZERO
 var expansion_requests: int = 0
@@ -93,7 +96,6 @@ func start():
 		if iterations % batch_size == 0:
 			#await get_tree().create_timer(0.8).timeout
 			await get_tree().process_frame
-			print(expandable_rooms)
 		
 		run_algorithm()
 		

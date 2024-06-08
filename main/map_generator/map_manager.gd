@@ -1,6 +1,8 @@
 extends TileMap
 
-@export var generator: PackedScene
+class_name TreacherousMapManager
+
+var generator: PackedScene = preload("res://main/map_generator/generator.tscn")
 @export var generator_count: int = 1
 @export var generator_script: GDScript
 var generator_iterator: int = 0
@@ -18,7 +20,6 @@ func _process(_delta):
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()
 
-
 func start():
 	generator_iterator += 1
 	if generator_iterator > generator_count:
@@ -32,7 +33,7 @@ func start():
 	#gen.start_position.y = randi_range(-90,90)
 	gen.start_position = Vector2i(0, 0)
 	gen.start_id = randi_range(15, 15)
-	gen.map_size = randi_range(50, 70)
+	gen.map_size = randi_range(800, 1000)
 	gen.batch_size = 1
 	gen.finished_generating.connect(generate)
 	gen.start()

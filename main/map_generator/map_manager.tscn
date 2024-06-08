@@ -2,15 +2,15 @@
 
 [ext_resource type="TileSet" uid="uid://7vhpumv5yog1" path="res://main/resources/map_generator_rooms.tres" id="1_jlbyk"]
 [ext_resource type="Script" path="res://main/map_generator/map_manager.gd" id="2_bmnuc"]
-[ext_resource type="PackedScene" uid="uid://b37gnjtxanqqk" path="res://generator.tscn" id="3_204fj"]
-[ext_resource type="Script" path="res://main/map_generator/map_generator.gd" id="4_e82di"]
+[ext_resource type="PackedScene" uid="uid://b37gnjtxanqqk" path="res://main/map_generator/generator.tscn" id="3_204fj"]
+[ext_resource type="Script" path="res://main/map_generator/generator_types/rooms_generator.gd" id="4_f2bat"]
 
 [node name="map_manager" type="TileMap"]
 tile_set = ExtResource("1_jlbyk")
 format = 2
 script = ExtResource("2_bmnuc")
 generator = ExtResource("3_204fj")
-generator_script = ExtResource("4_e82di")
+generator_script = ExtResource("4_f2bat")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.5, 0.5)
+zoom = Vector2(0.3, 0.3)

@@ -2,16 +2,12 @@ extends TreacherousMapGenerator
 
 
 ## Path marker sprite
-@export var draw_path: Node2D
-#Draws a path from mouse click to origin 
-#See draw_path.gd
+var icon1 : PackedScene = load("res://main/map_generator/path_marker.tscn")
 
 func draw_edge():
 	for edge_room in expandable_rooms:
-		spawn_marker(icon2, edge_room, map.tile_set.tile_size, 0)
+		spawn_marker(icon1, edge_room, map.tile_set.tile_size, 0)
 		
-@export var icon1: PackedScene
-@export var icon2: PackedScene
 func spawn_marker(icon, current_location, tile_size, rot):
 	var size_x = tile_size.x
 	var size_y = tile_size.y
@@ -42,7 +38,10 @@ func _input(event):
 					click_count = 0
 					create_path()
 
-
+func end_production():
+	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
+	
+	
 func clear_previous_markers():
 	for marker in get_tree().get_nodes_in_group("path_marker"):
 		marker.queue_free()
@@ -53,10 +52,8 @@ var pointer_2
 var pointer_1_path = []
 var pointer_2_path = []
 func create_path():
-#	pointer_1 = mouseclick_1
-#	pointer_2 = mouseclick_2
-	pointer_1 = Vector2i(0, 0)
-	pointer_2 = Vector2i(149, 79)
+	pointer_1 = mouseclick_1
+	pointer_2 = mouseclick_2
 	
 	if pointer_1 == pointer_2:
 		print("You are already here!")
@@ -96,7 +93,7 @@ func match_pointer_depths():
 func animate_path(path: Array):
 	var i = 0
 	while i < path.size()-1:
-#		await get_tree().create_timer(0.05).timeout
+		await get_tree().create_timer(0.05).timeout
 		var path_rotation = vector_to_rotation[path[i] - path[i+1]]
 		spawn_marker(icon1, path[i], map.tile_set.tile_size, path_rotation)
 		i += 1
