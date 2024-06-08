@@ -367,7 +367,7 @@ We do this by having each room keep track of how many of its von neumann neighbo
 
 
 ## Manipulating the Map Structure
-Because the map generator is structured as a tree where each node is processed sequentially, one after the other, we can easily manipulate the overall behaviour of the map by changing the odds of the output room based on user-defined conditions. For instance, we can increate the frequency of left-right rooms whenever they are available, by tenfold. Which produces the maps below:
+Because the map generator is structured as a tree where each node is processed sequentially, we can easily manipulate the overall behaviour of the map by changing the odds of the output room based on user-defined conditions. For instance, we can increase the frequency of left-right rooms whenever they are available, by tenfold. Which produces the maps below:
 
 ![ezgif-5-fe49acf482](https://github.com/TreacherousDev/Treacherous/assets/55629534/64ad5051-1b22-4f2e-9201-aa6ba70069a4)
 
