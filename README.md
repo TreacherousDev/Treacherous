@@ -267,10 +267,86 @@ If we map each number to their respective room value, it should look like this:
 
 
 # Map Customization
-Because our tree automata is not deterministic, in that node production relies on picking a random element from an element pool, there is no proper way to control the growth of the map to adhere to a certain cell count. One p[roduction might lead to an incredibly small room, while another might be infinitely large. With this, there are 2 main problems we have to tackle, which are:
+Because our tree automata is not deterministic, in that node production relies on picking a random element from an element pool, there is no proper way to control the growth of the map to adhere to a certain cell count. One production might lead to an incredibly small room, while another might be infinitely large. With this, there are 2 main problems we have to tackle, which are:
 1. Map Closing, for when the automata approaches the cell count limit
 2. Map Expansion, for when the automata stops prematurely before the expected limit is reached
 
 ## Map Closing
-Handling map closing is pretty straightforward. Each node produced will be given access to a global variable that will be used to track the current cell count. Each node production increments this number by 1.
+Handling map closing is pretty straightforward. Each node produced will be given access to a global variable that will be used to track the current cell count. Each node production increases the value of this variable by 1. A map size constant can then be declared to compare against this variable, so that the generator will force spawn closing rooms when it approaches the desired size. This can be easily achieved by referencing the node's parent direction and setting its tilemap coordinate to the direction's assigned room ID.
+
+
+Take this given map configuration with 10 determined rooms from earlier as an example. If we declared the map size to be 11, then X has to spawn a closing room as to not produce any more rooms on the next iteration. 
+
+``` 
+---2C--   
+--2E9--  
+---3C--  
+--6A9--   
+-#X#--- 
+```
+You get the parent direction of X, which in this case is up, and and assign it as the new value of the rom ID of X, disregarding all other options.
+``` 
+up = 1
+
+---2C--   
+--2E9--  
+---3C--  
+--6A9--   
+--1---- 
+```
+
+## Map Expansion
+Similar to map closing, we can also conditionally manipulate the spawning conditions of the node in such that it is guaranteed to produce more branches. We can set a variable that tracks the current number of pending spawners, and if it is less than a certain amount, remove closing rooms from the room selection. 
+
+Take this configuration with 9 determined rooms and 1 pending for instance:
+If the desired map size is 11 or higher, then we remove the parent direction from the room pool to stop it from closing prematurely.
+```
+---2C--   
+--2E9--   
+--#3C--  
+-#XA9--   
+--#----
+
+{ {}, {1}, {4}, {8}, {1, 4}, {1, 8}, {4, 8}, {1, 4, 8} }
+{ {2}, {2, 1}, {2, 4}, {2, 8}, {2, 1, 4}, {2, 1, 8}, {2, 4, 8}, {2, 1, 4, 8} }
+parent direction removed = { {2, 1}, {2, 4}, {2, 8}, {2, 1, 4}, {2, 1, 8}, {2, 4, 8}, {2, 1, 4, 8} }
+```
+
+We can also implement a heuristic with a higher depth and perfect precision by removing high numbered branches as the map approaches the max size. 
+In the example earlier in map closing, if instead the max map size is 12, we do not assign X as the parent rom direction as that would close the map 1 cell prematurely. BUt what we can do is remove the rooms with 3 or more branches to ensure that the next iteration can only spawn a max of 1 other cell to complete the 12 room map size.
+``` 
+---2C--   
+--2E9--  
+---3C--  
+--6A9--   
+-#X#---
+
+Cell Count: 10
+Desired Map Size: 12
+{ {], {2}, {8}, {2, 8} }
+{ {1], {1, 2}, {1, 8}, {1, 2, 8} }
+3 or more directions removed = { {1], {1, 2}, {1, 8} }
+cell count not yet reached, remove closing room = { {1, 2}, {1, 8} }
+selection = { 3, 9 }
+
+---2C--   ---2C--   ---2C--  
+--2E9--   --2E9--   --2E9--    
+---3C--   ---3C--   ---3C--   
+--6A9--   --6A9--   -#6A9--   
+--3----   -@3----   #X3----   
+
+Cell Count: 11
+Desired Map Size: 12
+{ {], {1}, {8}, {1, 8} }
+{ {2], {2, 1}, {2, 8}, {2, 1, 8} }
+cell count approaching room, select closing room = { {2} }
+selection = { 2 }
+
+---2C--     
+--2E9--    
+---3C--    
+--6A9--   
+-23----
+```  
+
 WIP - Will keep this updated!
