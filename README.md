@@ -32,7 +32,8 @@ View the Technical Documentation [here](https://github.com/TreacherousDev/Treach
 
 ![image](https://github.com/TreacherousDev/Treacherous/assets/55629534/c7bb1ed8-ec12-4e2b-bee9-8aee79aa90ca)
 
-4. Save the current scene and run it to test if it is working correctly. You may need to attach a Camera2D node as a child to adjust the view of the map. 
+4. Save the current scene and run it to test if it is working correctly. You may need to attach a Camera2D node as a child to adjust the view of the map.
+
 ![ezgif-3-1e8b76de61](https://github.com/TreacherousDev/Treacherous/assets/55629534/ef5f6a81-3133-4e69-9f0c-dd1ee8c3f4cc)
 
 
