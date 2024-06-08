@@ -94,7 +94,7 @@ func start():
 	while (next_active_cells.size() != 0):
 		iterations += 1
 		if iterations % batch_size == 0:
-			#await get_tree().create_timer(0.8).timeout
+			#await get_tree().create_timer(0.15).timeout
 			await get_tree().process_frame
 		
 		run_algorithm()

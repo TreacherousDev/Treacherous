@@ -91,7 +91,7 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 
 ################################################################################################
 
-@export var icon: PackedScene
+var icon: PackedScene = preload("res://main/map_generator/path_marker.tscn")
 func spawn_marker(icon, current_location, tile_size, rot):
 	var size_x = tile_size.x
 	var size_y = tile_size.y
@@ -103,8 +103,8 @@ func spawn_marker(icon, current_location, tile_size, rot):
 	new_icon.rotation_degrees = rot
 
 
-@export var start_cell: Vector2i
-@export var end_cell: Vector2i
+@export var start_cell: Vector2i = Vector2i.ZERO
+@export var end_cell: Vector2i = Vector2i(3,3)
 var vector_to_rotation = {Vector2i.UP: 90, Vector2i.RIGHT: 180, Vector2i.DOWN: 270, Vector2i.LEFT: 0}
 var pointer_1: Vector2i
 var pointer_2: Vector2i
