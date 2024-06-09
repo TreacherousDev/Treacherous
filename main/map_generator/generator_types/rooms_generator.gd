@@ -52,6 +52,7 @@ func create_path():
 	while i < path_by_vector.size()-1:
 		#await get_tree().create_timer(0.05).timeout
 		await get_tree().process_frame
+		await get_tree().process_frame
 		var path_rotation = vector_to_rotation[path_by_vector[i] - path_by_vector[i+1]]
 		spawn_marker(icon1, path_by_vector[i], map.tile_set.tile_size, path_rotation)
 		i += 1
@@ -75,7 +76,7 @@ var vector_to_rotation = {Vector2i.UP: 90, Vector2i.RIGHT: 180, Vector2i.DOWN: 2
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
 	await get_tree().create_timer(0.5).timeout
-	braid_dungeon()
+	await(braid_dungeon())
 	something()
 	#await get_tree().create_timer(1).timeout
 	#get_tree().reload_current_scene()
@@ -100,22 +101,20 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
 	
-	if rooms_expected_next_iteration > 8:
+	if rooms_expected_next_iteration > 6:
 		force_spawn_room(parent_direction, room_selection)
+	add_rooms_to_pool([10,5],2,room_selection)
 ################################################################################################\
 
 @export var braid_percentage: float = 30
-func connect_rooms(rooms_to_connect: Array):
-	for room in rooms_to_connect:
-		#await get_tree().create_timer(0.1).timeout
-		var id: int = map.get_cell_atlas_coords(0, room).x
-		connect_to_neighbor(room, id)
-
 # BRAID MAZE
 # Connects dead ends to a random neighbor. % of dead ends connected is controlled by braid_percentage
 func braid_dungeon():
 	var rooms_to_connect = select_braidable_rooms()
-	connect_rooms(rooms_to_connect)
+	for room in rooms_to_connect:
+		await get_tree().process_frame
+		var id: int = map.get_cell_atlas_coords(0, room).x
+		connect_to_neighbor(room, id)
 
 # SELECT DEAD ENDS
 # Returns a list of randomly selected dead ends from all available dead ends
@@ -148,15 +147,21 @@ func connect_to_neighbor(current_room: Vector2i, id: int):
 	if attachable_neighbor_directions.is_empty():
 		return
 	
-	var selected_neighbor_direction: int = select_random_element(attachable_neighbor_directions)
-	var selected_neighbor_coords: Vector2i = current_room + direction_to_coords[selected_neighbor_direction]
-	var selected_neighbor_cell_id: int = map.get_cell_atlas_coords(0, selected_neighbor_coords).x
-	
-	var new_cell_value = id + selected_neighbor_direction
-	map.set_cell(0, current_room, 0, Vector2i(new_cell_value, 0))
-	
-	var new_neighbor_cell_value = selected_neighbor_cell_id + opposite_direction[selected_neighbor_direction]
-	map.set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_cell_value, 0))
+	attachable_neighbor_directions = shuffle_array_with_seed(attachable_neighbor_directions)
+	if braid_percentage < 100:
+		attachable_neighbor_directions = [attachable_neighbor_directions[0]]
+
+	for attachable_neighbor_direction in attachable_neighbor_directions:
+		var current_room_id: int = map.get_cell_atlas_coords(0, current_room).x
+		var selected_neighbor_direction: int = attachable_neighbor_direction
+		var selected_neighbor_coords: Vector2i = current_room + direction_to_coords[selected_neighbor_direction]
+		var selected_neighbor_cell_id: int = map.get_cell_atlas_coords(0, selected_neighbor_coords).x
+		
+		var new_cell_value = current_room_id + selected_neighbor_direction
+		map.set_cell(0, current_room, 0, Vector2i(new_cell_value, 0))
+
+		var new_neighbor_cell_value = selected_neighbor_cell_id + opposite_direction[selected_neighbor_direction]
+		map.set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_cell_value, 0))
 	
 
 # GET NEIGHBORS

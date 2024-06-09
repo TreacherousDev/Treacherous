@@ -53,7 +53,7 @@ func start():
 	#gen.start_position.y = randi_range(-90,90)
 	gen.start_position = Vector2i(0, 0)
 	gen.start_id = randi_range(15, 15)
-	gen.map_size = randi_range(800, 800)
+	gen.map_size = randi_range(70, 80)
 	gen.batch_size = 1
 	gen.finished_generating.connect(generate)
 	gen.start()
