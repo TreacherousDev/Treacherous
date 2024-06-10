@@ -10,7 +10,7 @@ func something():
 	var points = astar.get_point_ids()
 	for point_id in points:
 		var cell_vector = cell_data.keys()[point_id]
-		var cell_room_id = map.get_cell_atlas_coords(0, cell_vector).x
+		var cell_room_id = get_cell_atlas_coords(0, cell_vector).x
 		var cell_branches = room_id_to_directions[cell_room_id]
 		for branch in cell_branches:
 			var destination_vector = direction_to_coords[branch] + cell_vector
@@ -25,14 +25,14 @@ func _input(event):
 	if event is InputEventMouseButton:
 		if event.pressed:
 			if click_count == 0:
-				var click_1 = map.local_to_map(get_local_mouse_position())
-				if map.get_used_cells(0).has(click_1):
+				var click_1 = local_to_map(get_local_mouse_position())
+				if get_used_cells(0).has(click_1):
 					clear_previous_markers()
 					path_start_id = cell_data.keys().find(click_1,0)
 					click_count += 1
 			elif click_count == 1:
-				var click_2 = map.local_to_map(get_local_mouse_position())
-				if map.get_used_cells(0).has(click_2):
+				var click_2 = local_to_map(get_local_mouse_position())
+				if get_used_cells(0).has(click_2):
 					path_destination_id = cell_data.keys().find(click_2,0)
 					click_count = 0
 					create_path()
@@ -54,7 +54,7 @@ func create_path():
 		await get_tree().process_frame
 		await get_tree().process_frame
 		var path_rotation = vector_to_rotation[path_by_vector[i] - path_by_vector[i+1]]
-		spawn_marker(icon1, path_by_vector[i], map.tile_set.tile_size, path_rotation)
+		spawn_marker(icon1, path_by_vector[i], tile_set.tile_size, path_rotation)
 		i += 1
 
 func spawn_marker(icon, current_location, tile_size, rot):
@@ -113,7 +113,7 @@ func braid_dungeon():
 	var rooms_to_connect = select_braidable_rooms()
 	for room in rooms_to_connect:
 		await get_tree().process_frame
-		var id: int = map.get_cell_atlas_coords(0, room).x
+		var id: int = get_cell_atlas_coords(0, room).x
 		connect_to_neighbor(room, id)
 
 # SELECT DEAD ENDS
@@ -152,16 +152,16 @@ func connect_to_neighbor(current_room: Vector2i, id: int):
 		attachable_neighbor_directions = [attachable_neighbor_directions[0]]
 
 	for attachable_neighbor_direction in attachable_neighbor_directions:
-		var current_room_id: int = map.get_cell_atlas_coords(0, current_room).x
+		var current_room_id: int = get_cell_atlas_coords(0, current_room).x
 		var selected_neighbor_direction: int = attachable_neighbor_direction
 		var selected_neighbor_coords: Vector2i = current_room + direction_to_coords[selected_neighbor_direction]
-		var selected_neighbor_cell_id: int = map.get_cell_atlas_coords(0, selected_neighbor_coords).x
+		var selected_neighbor_cell_id: int = get_cell_atlas_coords(0, selected_neighbor_coords).x
 		
 		var new_cell_value = current_room_id + selected_neighbor_direction
-		map.set_cell(0, current_room, 0, Vector2i(new_cell_value, 0))
+		set_cell(0, current_room, 0, Vector2i(new_cell_value, 0))
 
 		var new_neighbor_cell_value = selected_neighbor_cell_id + opposite_direction[selected_neighbor_direction]
-		map.set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_cell_value, 0))
+		set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_cell_value, 0))
 	
 
 # GET NEIGHBORS
@@ -169,12 +169,12 @@ func connect_to_neighbor(current_room: Vector2i, id: int):
 # Output: array containing all non-border von neuman neighbors, expressed as int bit flags
 func get_neighbors(cell: Vector2i) -> Array:
 	var neighbors = []
-	if map.get_cell_atlas_coords(0, cell + Vector2i.UP) != Vector2i.ZERO:
+	if get_cell_atlas_coords(0, cell + Vector2i.UP) != Vector2i.ZERO:
 		neighbors.append(1)
-	if map.get_cell_atlas_coords(0, cell + Vector2i.RIGHT) != Vector2i.ZERO:
+	if get_cell_atlas_coords(0, cell + Vector2i.RIGHT) != Vector2i.ZERO:
 		neighbors.append(2)
-	if map.get_cell_atlas_coords(0, cell + Vector2i.DOWN) != Vector2i.ZERO:
+	if get_cell_atlas_coords(0, cell + Vector2i.DOWN) != Vector2i.ZERO:
 		neighbors.append(4)
-	if map.get_cell_atlas_coords(0, cell + Vector2i.LEFT) != Vector2i.ZERO:
+	if get_cell_atlas_coords(0, cell + Vector2i.LEFT) != Vector2i.ZERO:
 		neighbors.append(8)
 	return neighbors

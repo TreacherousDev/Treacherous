@@ -1,5 +1,5 @@
 extends TreacherousMapGenerator
-
+class_name CaveGenerator
 
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
@@ -30,7 +30,7 @@ func smoothen_border():
 		if chunk % 50 == 0:
 			await get_tree().process_frame
 		chunk += 1
-		map.set_cell(0, cell, 0, Vector2i(16, 0))
+		set_cell(0, cell, 0, Vector2i(16, 0))
 		border_cells.append(cell)
 #
 	for cell in border_cells:
@@ -41,7 +41,7 @@ func smoothen_border():
 		if chunk % 50 == 0:
 			await get_tree().process_frame
 		chunk += 1
-		map.set_cell(0, cell, 0, Vector2i(-1, -1))
+		set_cell(0, cell, 0, Vector2i(-1, -1))
 
 	if border_cells.size() != 0:
 		get_border(fill_next)
@@ -56,7 +56,7 @@ func get_moore_neighbor_count_of_cell(cell) -> int:
 	var neighbor_count: int = 0
 	for direction in moore_directions:
 		var moore_neighbor = cell + direction
-		if map.get_cell_atlas_coords(0, moore_neighbor) != Vector2i(-1, -1):
+		if get_cell_atlas_coords(0, moore_neighbor) != Vector2i(-1, -1):
 			neighbor_count += 1
 	return neighbor_count
 
@@ -67,7 +67,7 @@ func get_initial_border():
 		border_cells.append(cell)
 		for direction in vn_directions:
 			var vn_neighbor = cell + direction
-			if map.get_cell_atlas_coords(0, vn_neighbor) != Vector2i(-1, -1):
+			if get_cell_atlas_coords(0, vn_neighbor) != Vector2i(-1, -1):
 				continue
 			if !border_cells.has(vn_neighbor):
 				border_cells.append(vn_neighbor)
@@ -77,7 +77,7 @@ func get_border(previous_border_cells: Array):
 	for cell in previous_border_cells:
 		for direction in moore_directions:
 			var neighbor = cell + direction
-			if map.get_cell_atlas_coords(0, neighbor) != Vector2i(-1, -1):
+			if get_cell_atlas_coords(0, neighbor) != Vector2i(-1, -1):
 				continue
 			if !result.has(neighbor):
 				result.append(neighbor)

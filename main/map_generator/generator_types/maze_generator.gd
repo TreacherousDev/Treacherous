@@ -1,17 +1,40 @@
 extends TreacherousMapGenerator
 
 
+func _ready():
+	randomize()
+	rng.set_seed(randi())
+	draw_border()
+	map_size = 999999999
+	start()
+
+
+@export var border_height: int = 10
+@export var border_width: int = 10
+func draw_border():
+	for border in border_width:
+		set_cell(0,Vector2i(border+1,0),0,Vector2i(0,0))
+		set_cell(0,Vector2i(border+1,border_height+1),0,Vector2i(0,0))
+	for border in border_height:
+		set_cell(0,Vector2i(0,border+1),0,Vector2i(0,0))
+		set_cell(0,Vector2i(border_width+1,border+1),0,Vector2i(0,0))
+
+	set_cell(0,Vector2i(0,0),0,Vector2i(0,0))
+	set_cell(0,Vector2i(border_width+1,0),0,Vector2i(0,0))
+	set_cell(0,Vector2i(0,border_height+1),0,Vector2i(0,0))
+	set_cell(0,Vector2i(border_width+1,border_height+1),0,Vector2i(0,0))
+
 # END PRODUCTION
 func end_production():
 	braid_maze()
 	await get_tree().create_timer(0.6).timeout
-	create_path()
+	#create_path()
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
 
 @export var braid_percentage: float = 100
 func connect_dead_ends(dead_ends_to_connect: Array):
 	for dead_end in dead_ends_to_connect:
-		var id: int = map.get_cell_atlas_coords(0, dead_end).x
+		var id: int = get_cell_atlas_coords(0, dead_end).x
 		if id == cell_data[dead_end][PARENT_DIRECTION]:
 			connect_to_neighbor(dead_end, id)
 
@@ -26,6 +49,7 @@ func braid_maze():
 func select_dead_ends() -> Array:
 	var number_of_dead_ends_to_connect: int = closing_rooms.size() * (braid_percentage/100)
 	shuffle_array_with_seed(closing_rooms)
+	print(closing_rooms.size())
 	
 	var dead_ends_to_connect = []
 	for i in range(number_of_dead_ends_to_connect):
@@ -49,26 +73,26 @@ func connect_to_neighbor(dead_end: Vector2i, id: int):
 	
 	var selected_neighbor_direction: int = select_random_element(neighbors)
 	var selected_neighbor_coords: Vector2i = dead_end + direction_to_coords[selected_neighbor_direction]
-	var selected_neighbor_cell_id: int = map.get_cell_atlas_coords(0, selected_neighbor_coords).x
+	var selected_neighbor_cell_id: int = get_cell_atlas_coords(0, selected_neighbor_coords).x
 	
 	var new_cell_value = id + selected_neighbor_direction
-	map.set_cell(0, dead_end, 0, Vector2i(new_cell_value, 0))
+	set_cell(0, dead_end, 0, Vector2i(new_cell_value, 0))
 	
 	var new_neighbor_cell_value = selected_neighbor_cell_id + opposite_direction[selected_neighbor_direction]
-	map.set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_cell_value, 0))
+	set_cell(0, selected_neighbor_coords, 0, Vector2i(new_neighbor_cell_value, 0))
 
 # GET NEIGHBORS
 # Input: position of cell
 # Output: array containing all non-border von neuman neighbors, expressed as int bit flags
 func get_neighbors(cell: Vector2i) -> Array:
 	var neighbors = []
-	if map.get_cell_atlas_coords(0, cell + Vector2i.UP) != Vector2i.ZERO:
+	if get_cell_atlas_coords(0, cell + Vector2i.UP) != Vector2i.ZERO:
 		neighbors.append(1)
-	if map.get_cell_atlas_coords(0, cell + Vector2i.RIGHT) != Vector2i.ZERO:
+	if get_cell_atlas_coords(0, cell + Vector2i.RIGHT) != Vector2i.ZERO:
 		neighbors.append(2)
-	if map.get_cell_atlas_coords(0, cell + Vector2i.DOWN) != Vector2i.ZERO:
+	if get_cell_atlas_coords(0, cell + Vector2i.DOWN) != Vector2i.ZERO:
 		neighbors.append(4)
-	if map.get_cell_atlas_coords(0, cell + Vector2i.LEFT) != Vector2i.ZERO:
+	if get_cell_atlas_coords(0, cell + Vector2i.LEFT) != Vector2i.ZERO:
 		neighbors.append(8)
 	return neighbors
 
@@ -153,7 +177,7 @@ func draw_path(path: Array):
 	while i < path.size()-1:
 #		await get_tree().create_timer(0.05).timeout
 		var path_rotation = vector_to_rotation[path[i] - path[i+1]]
-		spawn_marker(icon, path[i], map.tile_set.tile_size, path_rotation)
+		spawn_marker(icon, path[i], tile_set.tile_size, path_rotation)
 		i += 1
 	
 	pointer_1_path.clear()

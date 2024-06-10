@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://bbh2o2g05nadd"]
+
+[ext_resource type="TileSet" uid="uid://b0jjcpx0cmh36" path="res://main/resources/map_generator_cave.tres" id="1_onoy4"]
+[ext_resource type="Script" path="res://main/map_generator/generator_types/cave_generator.gd" id="2_kcxdk"]
+
+[node name="TreacherousMapGenerator" type="TileMap"]
+tile_set = ExtResource("1_onoy4")
+format = 2
+script = ExtResource("2_kcxdk")
+map_size = 3000
+batch_size = 5
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.3, 0.3)

@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://dfl3e1yr40avb"]
+
+[ext_resource type="TileSet" uid="uid://7vhpumv5yog1" path="res://main/resources/map_generator_rooms.tres" id="1_c0y2x"]
+[ext_resource type="Script" path="res://main/map_generator/generator_types/map_generator.gd" id="2_ywsdo"]
+
+[node name="TreacherousMapGenerator" type="TileMap"]
+tile_set = ExtResource("1_c0y2x")
+format = 2
+script = ExtResource("2_ywsdo")
+
+[node name="Camera2D" type="Camera2D" parent="."]

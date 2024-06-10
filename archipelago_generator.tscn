@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://mb1klatqs4ge"]
+
+[ext_resource type="TileSet" uid="uid://b0jjcpx0cmh36" path="res://main/resources/map_generator_cave.tres" id="1_ugpgo"]
+[ext_resource type="Script" path="res://archipelago_generator.gd" id="2_vspmx"]
+
+[node name="TreacherousMapGenerator" type="TileMap"]
+tile_set = ExtResource("1_ugpgo")
+format = 2
+script = ExtResource("2_vspmx")
+generator_count = 30
+batch_size = 4
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.2, 0.2)

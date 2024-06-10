@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://dahssss1x03gr"]
+
+[ext_resource type="Script" path="res://main/map_generator/generator_types/maze_generator.gd" id="1_8mcs1"]
+[ext_resource type="TileSet" uid="uid://b0xvjp60its20" path="res://main/resources/map_generator_maze.tres" id="1_f5t74"]
+
+[node name="TreacherousMapGenerator" type="TileMap"]
+tile_set = ExtResource("1_f5t74")
+format = 2
+script = ExtResource("1_8mcs1")
+border_height = 50
+border_width = 100
+braid_percentage = 20.0
+start_id = 4
+start_position = Vector2i(1, 1)
+batch_size = 3
+
+[node name="Camera2D" type="Camera2D" parent="."]
+anchor_mode = 0
+zoom = Vector2(0.3, 0.3)
