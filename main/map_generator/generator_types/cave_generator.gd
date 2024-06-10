@@ -3,11 +3,10 @@ class_name CaveGenerator
 
 func end_production():
 	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
-	get_initial_border()
+	border_cells = get_initial_border(expandable_rooms)
 	smoothen_border()
 	
 var border_cells = []
-var border_cells_to_fill = []
 var moore_directions := [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)]
 var vn_directions := [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]
 
@@ -27,7 +26,7 @@ func smoothen_border():
 		if neighbor_count >= 5:
 			fill_next.append(cell)
 	for cell in fill_next:
-		if chunk % 50 == 0:
+		if chunk % 200 == 0:
 			await get_tree().process_frame
 		chunk += 1
 		set_cell(0, cell, 0, Vector2i(16, 0))
@@ -38,13 +37,13 @@ func smoothen_border():
 		if neighbor_count < 4:
 			clear_next.append(cell)
 	for cell in clear_next:
-		if chunk % 50 == 0:
+		if chunk % 200 == 0:
 			await get_tree().process_frame
 		chunk += 1
 		set_cell(0, cell, 0, Vector2i(-1, -1))
 
 	if border_cells.size() != 0:
-		get_border(fill_next)
+		border_cells = get_border(fill_next)
 		smoothen_border()
 	else: 
 		print("Border Smoothing Completed")
@@ -62,17 +61,20 @@ func get_moore_neighbor_count_of_cell(cell) -> int:
 
 # FILL MAP AND GET BORDER
 # replaces all direcional room sprites with 1 plain textures and gets the bounding shape of the map
-func get_initial_border():
-	for cell in expandable_rooms:
-		border_cells.append(cell)
+func get_initial_border(cells) -> Array:
+	var result = []
+	for cell in cells:
+		result.append(cell)
 		for direction in vn_directions:
 			var vn_neighbor = cell + direction
 			if get_cell_atlas_coords(0, vn_neighbor) != Vector2i(-1, -1):
 				continue
-			if !border_cells.has(vn_neighbor):
-				border_cells.append(vn_neighbor)
+			if result.has(vn_neighbor):
+				continue
+			result.append(vn_neighbor)
+	return result
 
-func get_border(previous_border_cells: Array):
+func get_border(previous_border_cells: Array) -> Array:
 	var result = []
 	for cell in previous_border_cells:
 		for direction in moore_directions:
@@ -81,7 +83,7 @@ func get_border(previous_border_cells: Array):
 				continue
 			if !result.has(neighbor):
 				result.append(neighbor)
-	border_cells = result
+	return result
 
 
 # MANIPULATE ROOM SELECTION
@@ -102,8 +104,8 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 20:
+	if rooms_expected_next_iteration > 50:
 		force_spawn_room(parent_direction, room_selection)
-	if rooms_expected_next_iteration < 8:
+	if rooms_expected_next_iteration < 20:
 		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################

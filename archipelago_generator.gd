@@ -13,7 +13,7 @@ func start():
 				break
 		
 		start_id = randi_range(15, 15)
-		map_size = randi_range(70, 800)
+		map_size = randi_range(70, 3000)
 		current_map_size = 0
 		
 		set_cell(0, start_position, 0, Vector2i(start_id, 0))
@@ -35,5 +35,33 @@ func start():
 			for i in range(expansion_requests):
 				expand_map()
 			expansion_requests = 0
-			
+		
+		var border_cells : Array  = get_initial_border(expandable_rooms)
+		var river_cells : Array  = get_border2(border_cells)
+		var river_cells2 : Array = get_border2(river_cells)
+		river_cells2.append_array(river_cells)
+		
+		for cell in river_cells2:
+			set_cell(0, cell, 0, Vector2i(0, 0))
+	
+	for cell in get_used_cells(0):
+		if get_cell_atlas_coords(0, cell) == Vector2i.ZERO:
+			set_cell(0, cell, 0, Vector2i(-1,-1))
 	end_production()
+	
+func get_border2(previous_border_cells: Array) -> Array:
+	var result = []
+	for cell in previous_border_cells:
+		for direction in moore_directions:
+			var neighbor = cell + direction
+			
+			if get_cell_atlas_coords(0, neighbor) != Vector2i(-1, -1):
+				continue
+			if result.has(neighbor):
+				continue
+			result.append(neighbor)
+	
+	return result
+	
+func expand_map():
+	pass
