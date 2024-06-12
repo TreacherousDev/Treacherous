@@ -8,7 +8,7 @@ tile_set = ExtResource("1_onoy4")
 format = 2
 script = ExtResource("2_kcxdk")
 map_size = 3000
-batch_size = 5
+batch_size = null
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(0.3, 0.3)

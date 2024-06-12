@@ -8,11 +8,7 @@ tile_set = ExtResource("1_f5t74")
 format = 2
 script = ExtResource("1_8mcs1")
 border_height = 50
-border_width = 100
-braid_percentage = 20.0
-start_id = 4
-start_position = Vector2i(1, 1)
-batch_size = 3
+border_width = 50
 
 [node name="Camera2D" type="Camera2D" parent="."]
 anchor_mode = 0

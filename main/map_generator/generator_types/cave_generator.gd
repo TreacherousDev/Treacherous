@@ -2,10 +2,11 @@ extends TreacherousMapGenerator
 class_name CaveGenerator
 
 func end_production():
-	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
-	border_cells = get_initial_border(expandable_rooms)
+	print("Map completed in ", iterations, " iterations and ", generator.expand_count, " expansions")
+	border_cells = get_initial_border(generator.expandable_rooms)
 	smoothen_border()
-	
+
+
 var border_cells = []
 var moore_directions := [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)]
 var vn_directions := [Vector2i(0, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1)]
@@ -47,7 +48,7 @@ func smoothen_border():
 		smoothen_border()
 	else: 
 		print("Border Smoothing Completed")
-		finished_generating.emit()
+		generator.finished_generating.emit()
 
 # GET MOORE NEIGHBOR COUNT OF CELL
 # searches each moore neighbor of the cell and counts how many non empty cells are there in total
@@ -90,12 +91,12 @@ func get_border(previous_border_cells: Array) -> Array:
 # all methods to manipulate rooom selection goes here
 func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
-	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
-	if current_map_size + rooms_expected_next_iteration >= map_size:
+	var parent_direction: int = generator.cell_data[cell][PARENT_DIRECTION]
+	if generator.current_map_size + generator.rooms_expected_next_iteration >= generator.map_size:
 		force_spawn_room(parent_direction, room_selection)
-	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
+	if generator.current_map_size + generator.rooms_expected_next_iteration + 1 >= generator.map_size:
 		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
-	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
+	if generator.current_map_size + generator.rooms_expected_next_iteration + 2 >= generator.map_size:
 		delete_rooms_from_pool([15], room_selection)
 	
 ####################################################################
@@ -104,8 +105,8 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 ####################################################################
 	
 	# sample 1: prevents the map from branching more than 10 branching paths per iteration
-	if rooms_expected_next_iteration > 50:
+	if generator.rooms_expected_next_iteration > 30:
 		force_spawn_room(parent_direction, room_selection)
-	if rooms_expected_next_iteration < 20:
+	if generator.rooms_expected_next_iteration < 15:
 		delete_rooms_from_pool([parent_direction], room_selection)
 ################################################################################################

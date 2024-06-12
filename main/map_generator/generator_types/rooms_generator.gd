@@ -4,17 +4,17 @@ extends TreacherousMapGenerator
 var astar = AStar2D.new()
 
 func something():
-	for cell in cell_data.keys():
-		astar.add_point(cell_data.keys().find(cell,0),cell,1)
+	for cell in generator.cell_data.keys():
+		astar.add_point( generator.cell_data.keys().find(cell,0),cell,1)
 	
 	var points = astar.get_point_ids()
 	for point_id in points:
-		var cell_vector = cell_data.keys()[point_id]
+		var cell_vector =  generator.cell_data.keys()[point_id]
 		var cell_room_id = get_cell_atlas_coords(0, cell_vector).x
 		var cell_branches = room_id_to_directions[cell_room_id]
 		for branch in cell_branches:
 			var destination_vector = direction_to_coords[branch] + cell_vector
-			var destination_point_id = cell_data.keys().find(destination_vector,0)
+			var destination_point_id =  generator.cell_data.keys().find(destination_vector,0)
 			astar.connect_points(point_id, destination_point_id, true)
 
 
@@ -28,12 +28,12 @@ func _input(event):
 				var click_1 = local_to_map(get_local_mouse_position())
 				if get_used_cells(0).has(click_1):
 					clear_previous_markers()
-					path_start_id = cell_data.keys().find(click_1,0)
+					path_start_id =  generator.cell_data.keys().find(click_1,0)
 					click_count += 1
 			elif click_count == 1:
 				var click_2 = local_to_map(get_local_mouse_position())
 				if get_used_cells(0).has(click_2):
-					path_destination_id = cell_data.keys().find(click_2,0)
+					path_destination_id =  generator.cell_data.keys().find(click_2,0)
 					click_count = 0
 					create_path()
 
@@ -45,7 +45,7 @@ func create_path():
 	var path_by_point_id = astar.get_id_path(path_start_id, path_destination_id)
 	var path_by_vector = []
 	for point_id in path_by_point_id:
-		var cell_vector = cell_data.keys()[point_id]
+		var cell_vector =  generator.cell_data.keys()[point_id]
 		path_by_vector.append(cell_vector)
 	
 	var i = 0
@@ -74,7 +74,7 @@ var vector_to_rotation = {Vector2i.UP: 90, Vector2i.RIGHT: 180, Vector2i.DOWN: 2
 
 
 func end_production():
-	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
+	print("Map completed in ", iterations, " iterations and ",  generator.expand_count, " expansions")
 	await get_tree().create_timer(0.5).timeout
 	await(braid_dungeon())
 	something()
@@ -88,12 +88,12 @@ func end_production():
 # all methods to manipulate rooom selection goes here
 func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
-	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
-	if current_map_size + rooms_expected_next_iteration >= map_size:
+	var parent_direction: int =  generator.cell_data[cell][PARENT_DIRECTION]
+	if  generator.current_map_size +  generator.rooms_expected_next_iteration >=  generator.map_size:
 		force_spawn_room(parent_direction, room_selection)
-	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
+	if  generator.current_map_size +  generator.rooms_expected_next_iteration + 1 >=  generator.map_size:
 		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
-	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
+	if  generator.current_map_size +  generator.rooms_expected_next_iteration + 2 >=  generator.map_size:
 		delete_rooms_from_pool([15], room_selection)
 	
 ####################################################################
@@ -101,7 +101,7 @@ func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
 	
-	if rooms_expected_next_iteration > 6:
+	if  generator.rooms_expected_next_iteration > 6:
 		force_spawn_room(parent_direction, room_selection)
 	add_rooms_to_pool([10,5],2,room_selection)
 ################################################################################################\
@@ -119,7 +119,7 @@ func braid_dungeon():
 # SELECT DEAD ENDS
 # Returns a list of randomly selected dead ends from all available dead ends
 func select_braidable_rooms() -> Array:
-	var braidable_rooms : Array = cell_data.keys().filter(func(x): return get_wall_openings(x).size() < 3)
+	var braidable_rooms : Array =  generator.cell_data.keys().filter(func(x): return get_wall_openings(x).size() < 3)
 	var number_of_rooms_to_connect: int = braidable_rooms.size() * (braid_percentage/100)
 	shuffle_array_with_seed(braidable_rooms)
 	
@@ -132,7 +132,7 @@ func get_attachable_neighbor_directions(blocked_neighbor_directions, current_roo
 	var attachable_neighbor_directions = []
 	for direction in blocked_neighbor_directions:
 		var neighbor = current_room + direction_to_coords[direction]
-		if cell_data.has(neighbor):
+		if  generator.cell_data.has(neighbor):
 			attachable_neighbor_directions.append(direction)
 	return attachable_neighbor_directions
 	

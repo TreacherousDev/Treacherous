@@ -1,11 +1,15 @@
 extends TreacherousMapGenerator
 
-
+@export var start_position: Vector2i = Vector2i(1,1)
+@export var start_id: int = 4
 func _ready():
 	randomize()
 	rng.set_seed(randi())
 	draw_border()
 	map_size = 999999999
+	generator.start_position.x = start_position.x
+	generator.start_position.y = start_position.y
+	generator.start_id = start_id
 	start()
 
 
@@ -28,14 +32,14 @@ func draw_border():
 func end_production():
 	braid_maze()
 	await get_tree().create_timer(0.6).timeout
-	#create_path()
-	print("Map completed in ", iterations, " iterations and ", expand_count, " expansions")
+	create_path()
+	print("Map completed in ", iterations, " iterations and ", generator.expand_count, " expansions")
 
-@export var braid_percentage: float = 100
+@export var braid_percentage: float = 0
 func connect_dead_ends(dead_ends_to_connect: Array):
 	for dead_end in dead_ends_to_connect:
 		var id: int = get_cell_atlas_coords(0, dead_end).x
-		if id == cell_data[dead_end][PARENT_DIRECTION]:
+		if id == generator.cell_data[dead_end][PARENT_DIRECTION]:
 			connect_to_neighbor(dead_end, id)
 
 # BRAID MAZE
@@ -47,13 +51,13 @@ func braid_maze():
 # SELECT DEAD ENDS
 # Returns a list of randomly selected dead ends from all available dead ends
 func select_dead_ends() -> Array:
-	var number_of_dead_ends_to_connect: int = closing_rooms.size() * (braid_percentage/100)
-	shuffle_array_with_seed(closing_rooms)
-	print(closing_rooms.size())
+	var number_of_dead_ends_to_connect: int = generator.closing_rooms.size() * (braid_percentage/100)
+	shuffle_array_with_seed(generator.closing_rooms)
+	print(generator.closing_rooms.size())
 	
 	var dead_ends_to_connect = []
 	for i in range(number_of_dead_ends_to_connect):
-		dead_ends_to_connect.append(closing_rooms[i])
+		dead_ends_to_connect.append(generator.closing_rooms[i])
 	return dead_ends_to_connect
 
 # CONNECT TO NEIGHBOR
@@ -63,7 +67,7 @@ func select_dead_ends() -> Array:
 func connect_to_neighbor(dead_end: Vector2i, id: int):
 	var opposite_direction = {1: 4, 2: 8, 4: 1, 8: 2}
 	var neighbors = get_neighbors(dead_end)
-	var parent = cell_data[dead_end][PARENT_DIRECTION]
+	var parent = generator.cell_data[dead_end][PARENT_DIRECTION]
 	
 	if parent != null:
 		neighbors.erase(parent)
@@ -100,18 +104,30 @@ func get_neighbors(cell: Vector2i) -> Array:
 #all methods to manipulate map structure goes here
 func manipulate_room_selection(cell: Vector2i, room_selection: Array):
 	# DEFAULT: Closes the map if the map size is already achieved
-	var parent_direction: int = cell_data[cell][PARENT_DIRECTION]
-	if current_map_size + rooms_expected_next_iteration >= map_size:
+	var parent_direction: int = generator.cell_data[cell][PARENT_DIRECTION]
+	if generator.current_map_size + generator.rooms_expected_next_iteration >= map_size:
 		force_spawn_room(parent_direction, room_selection)
-	if current_map_size + rooms_expected_next_iteration + 1 >= map_size:
+	if generator.current_map_size + generator.rooms_expected_next_iteration + 1 >= map_size:
 		delete_rooms_from_pool([7, 11, 13, 14, 15], room_selection)
-	if current_map_size + rooms_expected_next_iteration + 2 >= map_size:
+	if generator.current_map_size + generator.rooms_expected_next_iteration + 2 >= map_size:
 		delete_rooms_from_pool([15], room_selection)
 	
 ####################################################################
 # EDITABLE PORTION: YOUR CUSTOM MAP CONDITIONS GO BELOW THIS LINE  #
 # USE THE FUNCTIONS LISTED BELOW TO MANIPPULATE THE ROOM SELECTION #
 ####################################################################
+
+	delete_rooms_from_pool([7,11,13,14,15],room_selection)
+	
+	var branch_numbers = 20
+	if generator.cell_data[cell][DEPTH] > 4:
+		if generator.rooms_expected_next_iteration < branch_numbers:
+			generator.expansion_requests += 1
+	
+	var chance = 0.95
+	var roll = randf()
+	if roll <= chance:
+		delete_rooms_from_pool([parent_direction], room_selection)
 
 ################################################################################################
 
@@ -127,14 +143,16 @@ func spawn_marker(icon, current_location, tile_size, rot):
 	new_icon.rotation_degrees = rot
 
 
-@export var start_cell: Vector2i = Vector2i.ZERO
-@export var end_cell: Vector2i = Vector2i(3,3)
+var start_cell: Vector2i
+var end_cell: Vector2i
 var vector_to_rotation = {Vector2i.UP: 90, Vector2i.RIGHT: 180, Vector2i.DOWN: 270, Vector2i.LEFT: 0}
 var pointer_1: Vector2i
 var pointer_2: Vector2i
 var pointer_1_path = []
 var pointer_2_path = []
 func create_path():
+	start_cell = Vector2i(1,1)
+	end_cell = Vector2i(border_width,border_height)
 	pointer_1 = start_cell
 	pointer_2 = end_cell
 
@@ -151,24 +169,24 @@ func create_path():
 func connect_pointers_by_increment():
 	while pointer_1 != pointer_2:
 		pointer_1_path.append(pointer_1)
-		pointer_1 = cell_data[pointer_1][PARENT_POSITION]
+		pointer_1 = generator.cell_data[pointer_1][PARENT_POSITION]
 		pointer_2_path.append(pointer_2)
-		pointer_2 = cell_data[pointer_2][PARENT_POSITION]
+		pointer_2 = generator.cell_data[pointer_2][PARENT_POSITION]
 	pointer_1_path.append(pointer_1)
 
 func match_pointer_depths():
-	var depth_1 = cell_data[pointer_1][DEPTH]
-	var depth_2 = cell_data[pointer_2][DEPTH]
+	var depth_1 = generator.cell_data[pointer_1][DEPTH]
+	var depth_2 = generator.cell_data[pointer_2][DEPTH]
 	var difference = depth_1 - depth_2
 	if difference > 0:
 		while difference > 0: 
 			pointer_1_path.append(pointer_1)
-			pointer_1 = cell_data[pointer_1][PARENT_POSITION]
+			pointer_1 = generator.cell_data[pointer_1][PARENT_POSITION]
 			difference -= 1
 	elif difference < 0:
 		while difference < 0: 
 			pointer_2_path.append(pointer_2)
-			pointer_2 = cell_data[pointer_2][PARENT_POSITION]
+			pointer_2 = generator.cell_data[pointer_2][PARENT_POSITION]
 			difference += 1
 
 

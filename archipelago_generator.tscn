@@ -7,8 +7,8 @@
 tile_set = ExtResource("1_ugpgo")
 format = 2
 script = ExtResource("2_vspmx")
-generator_count = 30
-batch_size = 2
+generator_count = 15
+batch_size = 20
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(0.15, 0.15)
